@@ -14,7 +14,7 @@ const server = http.createServer((req, res) => {
 });
 files['/manifest.webmanifest'] = ['manifest.webmanifest', 'application/manifest+json'];
 for (const name of ['favicon.png', 'icon-192.png', 'icon-512.png']) files[`/${name}`] = [name, 'image/png'];
-files['/cat-portraits.jpg'] = ['cat-portraits.jpg', 'image/jpeg'];
+files['/cat-portraits.png'] = ['cat-portraits.png', 'image/png'];
 files['/apple-touch-icon.png'] = ['apple-touch-icon.png', 'image/png'];
 server.on('error', error => { console.error(error.code === 'EADDRINUSE' ? '4783 portu kullanimda. Acik Mama Payi penceresini kontrol et.' : error.message); process.exitCode = 1; });
 server.listen(4783, '0.0.0.0', () => {

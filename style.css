@@ -108,7 +108,6 @@ option { color: var(--ink); background: var(--paper); }
 .cat-navigation button { display: flex; align-items: center; justify-content: center; gap: 4px; font: inherit; font-size: 14px; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); padding: 8px 12px; cursor: pointer; }
 #cat-tabs button { flex-shrink: 0; width: 64px; height: 64px; padding: 4px; gap: 2px; border-radius: 50%; color: var(--accent); background: var(--tint); border-color: transparent; }
 #cat-tabs svg { width: 44px; height: 44px; }
-#cat-tabs .cat-number { position: absolute; right: 2px; bottom: 2px; min-width: 20px; height: 20px; padding: 0 4px; display: grid; place-items: center; border-radius: 10px; background: var(--paper); color: var(--accent); font-size: 11px; font-weight: 600; line-height: 1; white-space: nowrap; }
 #cat-tabs svg { color: var(--icon-ink); }
 #cat-tabs [aria-selected=true] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 #add-cat { flex-shrink: 0; width: 52px; height: 52px; padding: 0; border-radius: 50%; }
@@ -132,8 +131,8 @@ footer { margin-top: 32px; text-align: center; color: var(--muted); font-size: 1
 #delete-success { text-align: center; }
 #delete-success > svg { width: 40px; height: 40px; color: var(--ink); }
 #delete-success-message { margin: 12px 0 24px; }
-#delete-dialog { width: min(360px, calc(100% - 32px)); padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); color: var(--ink); }
-#delete-dialog::backdrop { background: #0008; }
+:is(#delete-dialog, #appearance-dialog) { width: min(360px, calc(100% - 32px)); padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); color: var(--ink); }
+:is(#delete-dialog, #appearance-dialog)::backdrop { background: #0008; }
 #delete-question { margin: 0 0 24px; }
 .dialog-actions { display: flex; justify-content: center; gap: 12px; }
 .dialog-actions button { min-width: 88px; min-height: 44px; padding: 8px 16px; font: inherit; border: 1px solid var(--border); border-radius: 10px; background: var(--paper); color: var(--ink); cursor: pointer; }
@@ -162,13 +161,13 @@ footer { margin-top: 32px; text-align: center; color: var(--muted); font-size: 1
   ::view-transition-new(theme-icon) { animation: icon-in 380ms var(--ease-out) both; }
   .field-info[open] .info-content { animation: surface-in 200ms var(--ease-out) both; }
   #delete-success:not([hidden]) { animation: surface-in 120ms var(--ease-out) both; }
-  #delete-dialog { opacity: 0; transform: translateY(6px) scale(.98); transition: opacity 100ms ease, transform 120ms var(--ease-out), display 120ms allow-discrete, overlay 120ms allow-discrete; }
-  #delete-dialog[open] { opacity: 1; transform: translateY(0) scale(1); }
-  #delete-dialog::backdrop { background: #0000; transition: background-color 120ms ease, display 120ms allow-discrete, overlay 120ms allow-discrete; }
-  #delete-dialog[open]::backdrop { background: #0008; }
+  :is(#delete-dialog, #appearance-dialog) { opacity: 0; transform: translateY(6px) scale(.98); transition: opacity 100ms ease, transform 120ms var(--ease-out), display 120ms allow-discrete, overlay 120ms allow-discrete; }
+  :is(#delete-dialog, #appearance-dialog)[open] { opacity: 1; transform: translateY(0) scale(1); }
+  :is(#delete-dialog, #appearance-dialog)::backdrop { background: #0000; transition: background-color 120ms ease, display 120ms allow-discrete, overlay 120ms allow-discrete; }
+  :is(#delete-dialog, #appearance-dialog)[open]::backdrop { background: #0008; }
   @starting-style {
-    #delete-dialog[open] { opacity: 0; transform: translateY(6px) scale(.98); }
-    #delete-dialog[open]::backdrop { background: #0000; }
+    :is(#delete-dialog, #appearance-dialog)[open] { opacity: 0; transform: translateY(6px) scale(.98); }
+    :is(#delete-dialog, #appearance-dialog)[open]::backdrop { background: #0000; }
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -189,3 +188,12 @@ footer { margin-top: 32px; text-align: center; color: var(--muted); font-size: 1
 .cat-navigation #add-cat { align-self: flex-start; margin-top: 9px; }
 .weight-reference { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .info-content a { color: inherit; text-underline-offset: 3px; }
+
+#appearance-dialog { width: min(420px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; }
+#appearance-title { margin: 0 0 20px; font-size: 18px; font-weight: 600; text-align: center; }
+#appearance-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 20px; }
+#appearance-options button { display: grid; justify-items: center; gap: 6px; min-height: 86px; padding: 8px 4px; font: inherit; font-size: 12px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 12px; cursor: pointer; }
+#appearance-options svg { width: 48px; height: 48px; }
+#appearance-options [aria-pressed=true] { border-color: var(--accent); background: var(--tint); }
+#appearance-options button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) { .profile-tab { transition: opacity 180ms ease; } }

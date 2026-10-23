@@ -58,15 +58,21 @@ document.getElementById('theme-toggle').addEventListener('click', async event =>
   }
 });
 const palette = ['blue', 'green', 'rose', 'amber', 'purple', 'teal'];
-const newCat = (id, color = 'blue') => ({ id, color, name: '', weight: '', ideal: '', factor: '1', food: '', calories: '', automatic: false, portion: '' });
+const catTypes = [
+  ['tabby','Tekir','Brown tabby'], ['ginger','Sarman','Ginger'], ['tuxedo','Smokin','Tuxedo'], ['calico','Üç renkli','Calico'],
+  ['gray','Gri','Gray'], ['white','Beyaz','White'], ['siamese','Siyam','Siamese'], ['black','Siyah','Black'],
+  ['silver','Gümüş tekir','Silver tabby'], ['tortie','Bağa','Tortoiseshell'], ['ragdoll','Ragdoll','Ragdoll'], ['bicolor','Sarman beyaz','Ginger & white']
+];
+const newCat = (id, color = 'blue', appearance = 'tabby') => ({ id, color, appearance, name: '', weight: '', ideal: '', factor: '1', food: '', calories: '', automatic: false, portion: '' });
 const storedCats = Array.isArray(saved.cats) ? saved.cats.filter(cat => cat && typeof cat === 'object') : [];
 let cats = (Array.isArray(saved.cats) ? storedCats : [newCat('cat1')]).map((stored, index) => {
-  const cat = newCat(`cat${index + 1}`, palette[index % palette.length]);
+  const cat = newCat(`cat${index + 1}`, palette[index % palette.length], catTypes[index % catTypes.length][0]);
   for (const key of Object.keys(cat)) {
     if (key === 'id') continue;
     const limit = key === 'food' ? 200 : key === 'name' ? 60 : 12;
     if (key === 'automatic' ? typeof stored[key] === 'boolean' : typeof stored[key] === 'string' && stored[key].length <= limit) cat[key] = stored[key];
   }
+  if (!catTypes.some(type => type[0] === cat.appearance)) cat.appearance = catTypes[index % catTypes.length][0];
   if (!palette.includes(cat.color)) cat.color = palette[index % palette.length];
   if (!['0.8', '1', '1.2', '1.4', '1.8', '2', '2.5'].includes(cat.factor)) cat.factor = '1';
   return cat;
@@ -109,7 +115,7 @@ function translatePage() {
   document.getElementById('copyright').textContent = `© ${new Date().getFullYear()} Vivid Creative Works · ${language === 'en' ? 'An open-source hobby project.' : 'Açık kaynak bir hobi projesi.'}`;
   setTheme(document.documentElement.dataset.theme);
   for (const [id, text] of [['delete-question', 'Bu kedi profilini kaldırmak ister misin?'], ['delete-no', 'Hayır'], ['delete-yes', 'Evet']]) document.getElementById(id).textContent = t(text);
-  document.getElementById('cat-actions-hint').textContent = language === 'en' ? 'Choose a cat profile. Use the button below the form to remove the selected profile. The first profile is protected.' : 'Kedi profilini seçin. Seçili profili kaldırmak için formun altındaki butonu kullanın. İlk profil korunur.';
+  document.getElementById('cat-actions-hint').textContent = language === 'en' ? 'Choose a profile; tap the selected cat again to change its appearance. Remove profiles using the button below the form. The first profile is protected.' : 'Profil seçin; görünümünü değiştirmek için seçili kediye tekrar dokunun. Profili formun altından kaldırabilirsiniz. İlk profil korunur.';
   document.getElementById('remove-cat').textContent = language === 'en' ? 'Remove cat profile' : 'Kedi profilini kaldır';
   document.getElementById('cats').setAttribute('aria-label', language === 'en' ? 'Cat feeding settings' : 'Kedi beslenme ayarları');
   const walker = document.createTreeWalker(document.getElementById('cats'), NodeFilter.SHOW_TEXT);
@@ -122,19 +128,9 @@ const format = (value, digits = 1) => value.toLocaleString(language === 'en' ? '
 const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 const factors = [['0.8', '0,8× · Kilo verme'], ['1', '1× · Kiloyu koruma'], ['1.2', '1,2× · Kısır yetişkin'], ['1.4', '1,4× · Kısır olmayan yetişkin'], ['1.8', '1,8× · Kilo alma'], ['2', '2× · Yavru, 4–12 ay'], ['2.5', '2,5× · Yavru, 0–4 ay']];
 const infoIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></svg>';
-// Mask the original artwork so its baked checkerboard never appears in either theme.
-const catPortraits = [
-  [1335, 150, 445, 'M1362 193Q1380 158 1412 181L1480 220Q1556 189 1625 222L1689 183Q1739 157 1750 214Q1759 270 1735 319Q1785 399 1738 474Q1684 556 1557 559Q1426 558 1374 479Q1328 408 1369 328Q1343 250 1362 193Z'],
-  [140, 150, 425, 'M175 181Q179 154 207 171Q240 190 280 234Q347 208 422 235L486 177Q519 148 530 182Q541 224 523 316Q565 404 532 471Q489 553 360 557Q230 561 182 492Q141 437 161 370L181 316Q162 224 175 181Z'],
-  [745, 145, 430, 'M775 185Q782 143 812 163Q850 190 902 244Q954 228 1011 244L1081 176Q1119 140 1134 178Q1149 222 1130 337Q1170 411 1133 476Q1083 559 959 561Q831 558 784 487Q744 425 774 349Q761 241 775 185Z'],
-  [1335, 725, 450, 'M1353 761Q1363 732 1387 742L1483 824Q1556 809 1628 829L1728 749Q1764 719 1772 755Q1781 803 1744 923Q1776 1028 1714 1092Q1656 1147 1556 1150Q1447 1148 1397 1098Q1354 1057 1356 1003Q1354 961 1372 940Q1339 852 1353 761Z'],
-  [130, 755, 440, 'M148 837Q169 797 206 792Q232 779 266 806Q346 776 426 805Q455 772 480 790Q515 797 544 833Q555 851 542 867L528 879Q571 957 549 1029Q520 1134 351 1140Q191 1140 154 1048Q125 975 162 881Q136 868 148 837Z'],
-  [745, 730, 430, 'M766 773Q780 730 809 747Q851 777 902 827Q951 812 1007 828L1090 753Q1124 723 1138 766Q1152 811 1133 921Q1175 1004 1134 1069Q1081 1144 958 1147Q825 1145 782 1077Q741 1010 768 934Q754 823 766 773Z']
-];
 function catIcon(cat) {
-  const [x, y, size, outline] = catPortraits[palette.indexOf(cat.color)];
-  const clip = `portrait-${cat.id}`;
-  return `<svg viewBox="${x} ${y} ${size} ${size}" aria-hidden="true"><defs><clipPath id="${clip}"><path d="${outline}" transform="translate(${x + size / 2} ${y + size / 2}) scale(0.96) translate(${-x - size / 2} ${-y - size / 2})"/></clipPath></defs><image href="cat-portraits.jpg" width="1907" height="1280" preserveAspectRatio="none" clip-path="url(#${clip})"/></svg>`;
+  const index = Math.max(0, catTypes.findIndex(type => type[0] === cat.appearance));
+  return `<svg viewBox="${index % 4 * 320} ${[150,480,800][Math.floor(index / 4)]} 320 320" aria-hidden="true"><image href="cat-portraits.png?v=3" width="1280" height="1280"/></svg>`;
 }
 function info(label, content) {
   return `<details class="field-info"><summary aria-label="${escapeHtml(t(label))} — ${t('Bilgi')}">${infoIcon}</summary><div class="info-content">${content}</div></details>`;
@@ -169,7 +165,7 @@ function renderTabs() {
   const rail = document.getElementById('cat-tabs');
   const previousScroll = rail.scrollLeft;
   rail.parentElement.classList.toggle('multiple', cats.length > 1);
-  document.getElementById('cat-tabs').innerHTML = cats.map((cat, index) => `<div class="profile-tab" role="presentation"><button type="button" role="tab" id="tab-${cat.id}" aria-controls="${cat.id}" aria-selected="${cat.id === activeId}" tabindex="${cat.id === activeId ? 0 : -1}" data-cat="${cat.id}" data-color="${cat.color}" aria-label="${escapeHtml(catName(cat, index))}" title="${escapeHtml(catName(cat, index))}" aria-describedby="cat-actions-hint" aria-keyshortcuts="Delete Shift+F10">${catIcon(cat)}${cats.length > 1 ? `<span class="cat-number" aria-hidden="true">${index + 1}</span>` : ''}</button><span class="profile-name" aria-hidden="true" title="${escapeHtml(catName(cat, index))}">${escapeHtml(catName(cat, index))}</span></div>`).join('');
+  document.getElementById('cat-tabs').innerHTML = cats.map((cat, index) => `<div class="profile-tab" role="presentation"><button type="button" role="tab" id="tab-${cat.id}" aria-controls="${cat.id}" aria-selected="${cat.id === activeId}" tabindex="${cat.id === activeId ? 0 : -1}" data-cat="${cat.id}" data-color="${cat.color}" aria-label="${escapeHtml(catName(cat, index))}" title="${escapeHtml(catName(cat, index))}" aria-describedby="cat-actions-hint" aria-keyshortcuts="Delete Shift+F10">${catIcon(cat)}</button><span class="profile-name" aria-hidden="true" title="${escapeHtml(catName(cat, index))}">${escapeHtml(catName(cat, index))}</span></div>`).join('');
   document.getElementById('cat-tabs').setAttribute('aria-label', language === 'en' ? 'Cats' : 'Kediler');
   document.getElementById('add-cat').setAttribute('aria-label', t('Kedi ekle'));
   document.getElementById('add-cat').title = t('Kedi ekle');
@@ -308,6 +304,30 @@ function requestRemoval(id) {
   deleteDialog.showModal();
   haptic(20);
 }
+const appearanceDialog = document.getElementById('appearance-dialog');
+function openAppearance() {
+  const cat = cats.find(cat => cat.id === activeId);
+  if (!cat || appearanceDialog.open) return;
+  document.getElementById('appearance-title').textContent = language === 'en' ? 'Cat appearance' : 'Kedi görünümü';
+  document.getElementById('appearance-close').textContent = language === 'en' ? 'Done' : 'Tamam';
+  appearanceDialog.dataset.color = cat.color;
+  document.getElementById('appearance-options').innerHTML = catTypes.map(type => `<button type="button" data-appearance="${type[0]}" aria-pressed="${cat.appearance === type[0]}">${catIcon({appearance:type[0]})}<span>${escapeHtml(type[language === 'en' ? 2 : 1])}</span></button>`).join('');
+  appearanceDialog.showModal();
+  appearanceDialog.querySelector('[aria-pressed="true"]').focus();
+}
+document.getElementById('appearance-options').addEventListener('click', async event => {
+  const option = event.target.closest('[data-appearance]');
+  const cat = cats.find(cat => cat.id === activeId);
+  if (!option || !cat) return;
+  cat.appearance = option.dataset.appearance;
+  saveSettings(); haptic(); appearanceDialog.close();
+  const tab = document.getElementById(`tab-${cat.id}`);
+  const old = tab.querySelector('svg');
+  if (!reducedMotion.matches) await old.animate({opacity:[1,0]}, {duration:100,fill:'forwards'}).finished.catch(() => {});
+  if (!tab.isConnected) return;
+  old.remove(); tab.insertAdjacentHTML('afterbegin', catIcon(cat));
+  if (!reducedMotion.matches) tab.querySelector('svg').animate({opacity:[0,1]}, {duration:180,easing:'ease-out'});
+});
 const catTabs = document.getElementById('cat-tabs');
 catTabs.addEventListener('keydown', event => {
   if (event.key !== 'Delete' && !(event.shiftKey && event.key === 'F10')) return;
@@ -335,6 +355,7 @@ deleteDialog.querySelector('form').addEventListener('submit', event => {
   deleteSuccessTimer = setTimeout(() => deleteDialog.close(), 900);
 });
 deleteDialog.addEventListener('close', () => {
+  if (deleteDialog.open) return;
   clearTimeout(deleteSuccessTimer);
   pendingDeleteId = null;
   if (!document.getElementById('delete-success').hidden) {
@@ -344,7 +365,9 @@ deleteDialog.addEventListener('close', () => {
 
 document.getElementById('cat-tabs').addEventListener('click', event => {
   const tab = event.target.closest('[data-cat]');
-  if (tab) { if (tab.dataset.cat !== activeId) haptic(); activateCat(tab.dataset.cat); document.getElementById(`tab-${activeId}`).focus({ preventScroll: true }); }
+  if (!tab) return;
+  if (tab.dataset.cat === activeId) { openAppearance(); return; }
+  haptic(); activateCat(tab.dataset.cat); tab.focus({ preventScroll: true });
 });
 document.getElementById('cat-tabs').addEventListener('keydown', event => {
   if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
@@ -357,7 +380,7 @@ document.getElementById('cat-tabs').addEventListener('keydown', event => {
 function addCat() {
   haptic(12);
   const color = palette.find(color => !cats.some(cat => cat.color === color)) || palette[cats.length % palette.length];
-  const cat = newCat(`cat${nextCatId++}`, color);
+  const cat = newCat(`cat${nextCatId++}`, color, catTypes[cats.length % catTypes.length][0]);
   cats.push(cat); activeId = cat.id;
   render(); saveSettings();
   if (!reducedMotion.matches) {

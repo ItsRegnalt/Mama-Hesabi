@@ -7,17 +7,17 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Pati Gram">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="favicon.png?v=2" type="image/png" sizes="32x32">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2" sizes="180x180">
+  <link rel="icon" href="favicon.png?v=3" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3" sizes="180x180">
   <meta property="og:title" content="Pati Gram">
   <meta property="og:description" content="Kediniz için günlük mama miktarı ve RER hesaplama.">
   <meta property="og:image" content="https://itsregnalt.github.io/Pati_Gram/icon-512.png">
   <meta property="og:url" content="https://itsregnalt.github.io/Pati_Gram/">
   <meta property="og:type" content="website">
   <title>Pati Gram · Kedi Mama Hesabı</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3">
   <script defer src="calculator.js"></script>
-  <script defer src="app.js?v=portraits-2"></script>
+  <script defer src="app.js?v=appearance-3"></script>
 </head>
 <body>
   <main>
@@ -38,6 +38,11 @@
     <section class="cats" id="cats" aria-label="Kedilerin beslenme ayarları"></section>
     <button type="button" class="delete-cat" id="remove-cat" hidden>Kedi profilini kaldır</button>
     <footer><p id="save-status" class="hint save-status" role="status"></p><p id="copyright"></p></footer>
+    <dialog id="appearance-dialog" aria-labelledby="appearance-title">
+      <h2 id="appearance-title">Kedi görünümü</h2>
+      <div id="appearance-options"></div>
+      <form method="dialog" class="dialog-actions"><button id="appearance-close">Tamam</button></form>
+    </dialog>
     <dialog id="delete-dialog" aria-labelledby="delete-question">
       <form method="dialog">
         <div id="delete-confirm">
