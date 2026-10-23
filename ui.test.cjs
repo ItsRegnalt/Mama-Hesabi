@@ -282,6 +282,13 @@ const { chromium } = require('playwright');
       return tab.left + tab.width / 2 - rail.left - rail.width / 2;
     }, id);
     assert.ok(Math.abs(offset) <= 2, `Centered ${id}: ${offset}`);
+    assert.ok(await railPage.locator('#cat-tabs').evaluate(rail => {
+      const bounds = rail.getBoundingClientRect();
+      return [...rail.querySelectorAll('.profile-tab')].every(profile => {
+        const box = profile.getBoundingClientRect();
+        return getComputedStyle(profile).opacity === '0' || (box.left >= bounds.left + 2 && box.right <= bounds.right - 2);
+      });
+    }), `No partial portraits for ${id}`);
   }
   await railPage.evaluate(() => ['cat8', 'cat1', 'cat5'].forEach(id => document.getElementById(`tab-${id}`).click()));
   await railPage.waitForTimeout(550);

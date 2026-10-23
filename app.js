@@ -146,6 +146,16 @@ function input(cat, key, label, unit, wide = false) {
   return `<div class="field${wide ? ' wide' : ''}"><div class="label-row"><label for="${id}">${label}</label>${hint ? info(label, `<p id="${id}-hint">${t(hint)}</p><p>${t('Örnek: 350 kcal/100 g yazıyorsa 3500 gir.')}</p>`) : ''}</div><div class="input-wrap"><input id="${id}" name="${key}" value="${escapeHtml(cat[key])}" ${key === 'food' ? 'maxlength="200"' : `inputmode="${weight ? 'numeric' : 'decimal'}" maxlength="12"`} autocomplete="off"${hint ? ` aria-describedby="${id}-hint"` : ''}>${unit ? `<span class="unit">${unit}</span>` : ''}</div><p class="error" id="${id}-error" role="alert"></p></div>`;
 }
 function catName(cat, index) { return cat.name.trim() || `${language === 'en' ? 'Cat' : 'Kedi'} ${index + 1}`; }
+function updateRailEdges() {
+  const rail = document.getElementById('cat-tabs');
+  const bounds = rail.getBoundingClientRect();
+  rail.querySelectorAll('.profile-tab').forEach(profile => {
+    const box = profile.getBoundingClientRect();
+    profile.classList.toggle('outside-rail', box.left < bounds.left + 2 || box.right > bounds.right - 2);
+  });
+}
+document.getElementById('cat-tabs').addEventListener('scroll', updateRailEdges, { passive: true });
+new ResizeObserver(updateRailEdges).observe(document.getElementById('cat-tabs'));
 function centerActiveTab() {
   const rail = document.getElementById('cat-tabs');
   const tab = document.getElementById(`tab-${activeId}`);
@@ -153,6 +163,7 @@ function centerActiveTab() {
   const railBounds = rail.getBoundingClientRect();
   const tabBounds = tab.getBoundingClientRect();
   rail.scrollTo({ left: rail.scrollLeft + tabBounds.left - railBounds.left + tabBounds.width / 2 - rail.parentElement.clientWidth / 2, behavior: reducedMotion.matches ? 'instant' : 'smooth' });
+  updateRailEdges();
 }
 function renderTabs() {
   const rail = document.getElementById('cat-tabs');

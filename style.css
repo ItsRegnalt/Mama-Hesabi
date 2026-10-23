@@ -183,6 +183,7 @@ footer { margin-top: 32px; text-align: center; color: var(--muted); font-size: 1
 .multiple #cat-tabs::after { flex: 0 0 calc(50% - 68px); }
 
 .profile-tab { flex: 0 0 64px; min-width: 0; text-align: center; }
+.profile-tab.outside-rail { opacity: 0; pointer-events: none; }
 .profile-name { display: block; max-width: 64px; margin-top: 7px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; line-height: 18px; color: var(--muted); }
 .profile-tab:has([aria-selected="true"]) .profile-name { color: var(--ink); font-weight: 600; }
 .cat-navigation #add-cat { align-self: flex-start; margin-top: 9px; }
