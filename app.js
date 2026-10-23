@@ -230,9 +230,13 @@ document.getElementById('cats').addEventListener('input', event => {
 });
 const deleteDialog = document.getElementById('delete-dialog');
 let pendingDeleteId = null;
+let deleteSuccessTimer;
 function requestRemoval(id) {
   if (deleteDialog.open || !cats.some(cat => cat.id === id)) return;
   pendingDeleteId = id;
+  document.getElementById('delete-confirm').hidden = false;
+  document.getElementById('delete-success').hidden = true;
+  deleteDialog.setAttribute('aria-labelledby', 'delete-question');
   deleteDialog.returnValue = 'cancel';
   deleteDialog.showModal();
   haptic(20);
@@ -275,18 +279,31 @@ catTabs.addEventListener('keydown', event => {
   const tab = event.target.closest('[data-cat]');
   if (tab) { event.preventDefault(); requestRemoval(tab.dataset.cat); }
 });
-deleteDialog.addEventListener('close', () => {
+deleteDialog.querySelector('form').addEventListener('submit', event => {
+  if (event.submitter?.value !== 'delete') return;
+  event.preventDefault();
   const id = pendingDeleteId;
   pendingDeleteId = null;
-  if (deleteDialog.returnValue !== 'delete') return;
   const index = cats.findIndex(cat => cat.id === id);
   if (index < 0) return;
   haptic([10, 40, 10]);
   cats.splice(index, 1);
   activeId = cats[Math.min(index, cats.length - 1)]?.id || null;
   render(); saveSettings();
-  document.getElementById('action-status').textContent = t('Kedi profili kaldırıldı.');
-  (document.getElementById(`tab-${activeId}`) || document.getElementById('add-cat')).focus();
+  document.getElementById('delete-confirm').hidden = true;
+  document.getElementById('delete-success').hidden = false;
+  document.getElementById('delete-success-message').textContent = t('Kedi profili kaldırıldı.');
+  document.getElementById('delete-done').textContent = language === 'en' ? 'Done' : 'Tamam';
+  deleteDialog.setAttribute('aria-labelledby', 'delete-success-message');
+  document.getElementById('delete-done').focus();
+  deleteSuccessTimer = setTimeout(() => deleteDialog.close(), 1800);
+});
+deleteDialog.addEventListener('close', () => {
+  clearTimeout(deleteSuccessTimer);
+  pendingDeleteId = null;
+  if (!document.getElementById('delete-success').hidden) {
+    (document.getElementById(`tab-${activeId}`) || document.getElementById('add-cat')).focus();
+  }
 });
 
 document.getElementById('cat-tabs').addEventListener('click', event => {
@@ -307,7 +324,6 @@ function addCat() {
   const color = palette.find(color => !cats.some(cat => cat.color === color)) || palette[cats.length % palette.length];
   const cat = newCat(`cat${nextCatId++}`, color);
   cats.push(cat); activeId = cat.id;
-  document.getElementById('action-status').textContent = '';
   render(); saveSettings();
   document.getElementById(`${cat.id}-name`).focus();
 }

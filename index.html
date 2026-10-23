@@ -30,13 +30,19 @@
     </div>
       <div class="cat-navigation"><div id="cat-tabs" role="tablist" aria-label="Kediler"></div><button type="button" id="add-cat" aria-label="Kedi ekle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
     <p id="cat-actions-hint" class="sr-only"></p>
-    <p id="action-status" role="status"></p>
     <section class="cats" id="cats" aria-label="Kedilerin beslenme ayarları"></section>
     <footer><p id="save-status" class="hint save-status" role="status"></p><p id="copyright"></p></footer>
     <dialog id="delete-dialog" aria-labelledby="delete-question">
       <form method="dialog">
+        <div id="delete-confirm">
         <p id="delete-question">Bu kedi profilini kaldırmak ister misin?</p>
         <div class="dialog-actions"><button id="delete-no" value="cancel" autofocus>Hayır</button><button id="delete-yes" value="delete">Evet</button></div>
+        </div>
+        <div id="delete-success" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>
+          <p id="delete-success-message" role="status"></p>
+          <div class="dialog-actions"><button id="delete-done" value="cancel">Tamam</button></div>
+        </div>
       </form>
     </dialog>
   </main>
