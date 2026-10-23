@@ -39,14 +39,14 @@
 * { box-sizing: border-box; }
 body { margin: 0; line-height: 1.5; }
 main { max-width: 680px; padding: 32px 24px; margin: auto; }
-.toolbar { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 20px; }
+.toolbar { position: relative; z-index: 10; display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 20px; }
 .language-control { flex-shrink: 0; position: relative; display: grid; place-items: center; width: 44px; height: 44px; margin: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--muted); }
 .toolbar svg, .cat-navigation svg { width: 22px; height: 22px; pointer-events: none; }
 .theme-controls { flex-shrink: 0; display: flex; gap: 4px; }
 .theme-controls button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--muted); cursor: pointer; }
 .theme-controls button[aria-pressed=true] { background: var(--selected); color: var(--selected-ink); border-color: var(--selected); }
 .theme-controls button:focus-visible, .language-control:focus-within, .delete-cat:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
-.delete-cat { display: block; margin: 24px auto 0; min-height: 44px; padding: 8px 12px; font: inherit; font-size: 14px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--error); cursor: pointer; }
+.delete-cat { display: block; margin: 0; min-height: 44px; padding: 8px 12px; font: inherit; font-size: 14px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--error); cursor: pointer; }
 .delete-cat:hover { background: var(--error-bg); }
 .cats { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
 .cat { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; padding: 24px; }
@@ -136,9 +136,18 @@ option { color: var(--ink); background: var(--paper); }
 .info-content { position: absolute; z-index: 2; top: 100%; left: 0; width: min(280px, 100%); padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--control-gray); color: var(--ink); box-shadow: 0 4px 16px #0002; font-size: 13px; }
 .info-content p { margin: 0; }
 .info-content p + p { margin-top: 8px; }
-footer { margin-top: 32px; text-align: center; color: var(--muted); font-size: 12px; }
+footer { margin-top: 16px; text-align: left; color: var(--muted); font-size: 12px; }
 .save-status { margin: 0; font-size: 12px; }
-#copyright { margin: 28px 0 0; }
+#copyright { margin: 0; }
+.footer-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 0 16px; }
+.footer-actions > details { grid-area: 1 / 1 / 2 / -1; min-width: 0; }
+.footer-actions > .delete-cat { grid-area: 1 / 2; z-index: 1; max-width: 100%; }
+.footer-meta { display: grid; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); line-height: 1.5; }
+@media (max-width: 480px) {
+  .footer-actions { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .footer-actions > details { grid-area: auto; }
+  .footer-actions > .delete-cat { grid-area: auto; justify-self: start; }
+}
 .error { margin-top: 8px; }
 
 #delete-success { text-align: center; }
@@ -245,8 +254,8 @@ footer { margin-top: 32px; text-align: center; color: var(--muted); font-size: 1
   #cat-tabs .cat-portrait { transition: opacity 160ms ease; }
 }
 
-#install-help { margin: 0 0 28px; font-size: 13px; }
-#install-help > summary { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; width: fit-content; margin: auto; padding: 0 16px; cursor: pointer; border-radius: 14px; list-style: none; }
+#install-help { margin: 0; font-size: 13px; }
+#install-help > summary { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; width: fit-content; margin: 0; padding: 0 12px; cursor: pointer; border-radius: 14px; list-style: none; }
 #install-help > summary::-webkit-details-marker { display: none; }
 #install-help > summary::after { content: '+'; font-size: 18px; }
 #install-help[open] > summary::after { content: '−'; }

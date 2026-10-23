@@ -308,6 +308,34 @@ const { chromium } = require('playwright');
   assert.equal(await touchPage.locator('html').getAttribute('data-theme'), 'dark');
   assert.deepEqual(motionErrors, []);
   await touchContext.close();
+  // The language menu stays above the add button throughout its first press animation.
+  const overlayContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const overlayPage = await overlayContext.newPage();
+  await overlayPage.goto('http://localhost:4783');
+  for (const theme of ['light', 'dark']) {
+   await overlayPage.evaluate(theme => document.documentElement.dataset.theme = theme, theme);
+   await overlayPage.locator('#language summary').hover();
+   await overlayPage.mouse.down();
+   await overlayPage.mouse.up();
+   for (const delay of [0, 50, 150]) {
+    if (delay) await overlayPage.waitForTimeout(delay);
+    assert.ok(await overlayPage.evaluate(() => {
+     const menu = document.querySelector('.language-menu');
+     const add = document.getElementById('add-cat').getBoundingClientRect();
+     const box = menu.getBoundingClientRect();
+     const x = Math.max(box.left, add.left) + 8;
+     const y = Math.max(box.top, add.top) + 8;
+     return x < Math.min(box.right, add.right) && y < Math.min(box.bottom, add.bottom) && menu.contains(document.elementFromPoint(x, y));
+    }), 'Language menu covers the overlapping add button during press/release');
+   }
+   await overlayPage.locator('[data-language=en]').click();
+   await overlayPage.locator('#tab-cat1').click();
+   assert.ok((await overlayPage.locator('#appearance-options').innerText()).includes('Brown Tabby'));
+   assert.ok((await overlayPage.locator('#appearance-options').innerText()).includes('Silver Tabby'));
+   assert.ok((await overlayPage.locator('#appearance-options').innerText()).includes('Ginger & White'));
+   await overlayPage.keyboard.press('Escape');
+  }
+  await overlayContext.close();
   // First/last tabs must center too, with no vertical jump or focus scroll override.
   const railContext = await browser.newContext({ viewport: { width: 390, height: 1000 } });
   const railPage = await railContext.newPage();
@@ -410,6 +438,31 @@ const { chromium } = require('playwright');
   await hapticPage.locator('#add-cat').press('Enter');
   assert.equal(await hapticPage.getByRole('tab').count(), 4);
   await hapticContext.close();
+  for (const width of [320, 481, 820, 1440]) {
+   const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: 'reduce' });
+   const page = await context.newPage();
+   await page.goto('http://localhost:4783');
+   await page.locator('#add-cat').click();
+   for (const lang of ['tr', 'en', 'de', 'es']) {
+    await page.locator('#language summary').click();
+    await page.locator('[data-language=' + lang + ']').click();
+    assert.equal(await page.locator('html').getAttribute('lang'), lang);
+    const locale = await page.evaluate(lang => window.PatiLocales[lang] || {}, lang);
+    assert.equal(await page.locator('#remove-cat').textContent(), locale['Kedi profilini kaldır'] || 'Kedi profilini kaldır');
+    assert.equal(await page.locator('#save-status').textContent(), locale['Girdiğiniz bilgiler cihazınızda saklanır.'] || 'Girdiğiniz bilgiler cihazınızda saklanır.');
+    const help = await page.locator('#install-title').boundingBox();
+    const remove = await page.locator('#remove-cat').boundingBox();
+    assert.ok(help.x + help.width <= remove.x || help.y + help.height <= remove.y, 'Footer actions do not overlap: ' + lang + '/' + width);
+    await page.locator('#install-title').click();
+    assert.equal(await page.locator('#install-instructions section').count(), 3);
+    assert.ok(!(await page.locator('#install-instructions').innerText()).includes('Resmî'));
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'No horizontal overflow: ' + lang + '/' + width);
+    await page.locator('#install-title').click();
+   }
+   await page.reload();
+   assert.equal(await page.locator('html').getAttribute('lang'), 'es', 'Language persists');
+   await context.close();
+  }
   console.log('UI checks passed: seven widths, icon navigation, six matching colors in both themes, info popovers, storage, deletion and calculations.');
  } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

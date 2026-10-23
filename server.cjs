@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const files = { '/': ['index.html', 'text/html'], '/index.html': ['index.html', 'text/html'], '/style.css': ['style.css', 'text/css'], '/calculator.js': ['calculator.js', 'text/javascript'], '/app.js': ['app.js', 'text/javascript'] };
+files['/locales.js'] = ['locales.js', 'text/javascript'];
 const server = http.createServer((req, res) => {
   const file = files[req.url.split('?')[0]];
   if (!file) { res.writeHead(404); res.end('Bulunamadi'); return; }
