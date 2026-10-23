@@ -55,9 +55,9 @@ document.getElementById('theme-toggle').addEventListener('click', async event =>
 });
 const palette = ['blue', 'green', 'rose', 'amber', 'purple', 'teal'];
 const catTypes = [
-  ['tabby','Tekir','Brown tabby'], ['ginger','Sarman','Ginger'], ['tuxedo','Smokin','Tuxedo'], ['calico','Üç renkli','Calico'],
+  ['tabby','Tekir','Brown Tabby'], ['ginger','Sarman','Ginger'], ['tuxedo','Smokin','Tuxedo'], ['calico','Üç Renkli','Calico'],
   ['gray','Gri','Gray'], ['white','Beyaz','White'], ['siamese','Siyam','Siamese'], ['black','Siyah','Black'],
-  ['silver','Gümüş tekir','Silver tabby'], ['tortie','Bağa','Tortoiseshell'], ['ragdoll','Ragdoll','Ragdoll'], ['bicolor','Sarman beyaz','Ginger & white']
+  ['silver','Gümüş Tekir','Silver Tabby'], ['tortie','Bağa','Tortoiseshell'], ['ragdoll','Ragdoll','Ragdoll'], ['bicolor','Sarman Beyaz','Ginger & White']
 ];
 const newCat = (id, color = 'blue', appearance = 'tabby') => ({ id, color, appearance, name: '', weight: '', ideal: '', factor: '1', food: '', calories: '', automatic: false, portion: '' });
 const storedCats = Array.isArray(saved.cats) ? saved.cats.filter(cat => cat && typeof cat === 'object') : [];
