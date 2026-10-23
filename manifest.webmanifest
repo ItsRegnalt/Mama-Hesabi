@@ -1,0 +1,12 @@
+{
+  "name": "Mama Payı",
+  "short_name": "Mama Payı",
+  "lang": "tr",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#211f26",
+  "theme_color": "#211f26",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
