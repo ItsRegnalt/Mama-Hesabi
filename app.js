@@ -106,6 +106,8 @@ const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({ '&
 const factors = [['0.8', '0,8× · Kilo verme'], ['1', '1× · Kiloyu koruma'], ['1.2', '1,2× · Kısır yetişkin'], ['1.4', '1,4× · Kısır olmayan yetişkin'], ['1.8', '1,8× · Kilo alma'], ['2', '2× · Yavru, 4–12 ay'], ['2.5', '2,5× · Yavru, 0–4 ay']];
 const infoIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></svg>';
 const catIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10V3l6 4h4l6-4v7c1 2 1 5-1 7-3 4-11 4-14 0-2-2-2-5-1-7Z"/><path d="M8 12h.1m7.8 0h.1M10 15l2 1 2-1m-2 1v2M3 14l4 1m10 0 4-1"/></svg>';
+const holdRing = '<svg class="hold-ring" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19" pathLength="1"/></svg>';
+document.getElementById('add-cat').insertAdjacentHTML('beforeend', holdRing);
 function info(label, content) {
   return `<details class="field-info"><summary aria-label="${escapeHtml(t(label))} — ${t('Bilgi')}">${infoIcon}</summary><div class="info-content">${content}</div></details>`;
 }
@@ -117,10 +119,10 @@ function input(cat, key, label, unit, wide = false) {
 }
 function catName(cat, index) { return cat.name.trim() || `${language === 'en' ? 'Cat' : 'Kedi'} ${index + 1}`; }
 function renderTabs() {
-  document.getElementById('cat-tabs').innerHTML = cats.map((cat, index) => `<button type="button" role="tab" id="tab-${cat.id}" aria-controls="${cat.id}" aria-selected="${cat.id === activeId}" tabindex="${cat.id === activeId ? 0 : -1}" data-cat="${cat.id}" data-color="${cat.color}" aria-label="${escapeHtml(catName(cat, index))}" title="${escapeHtml(catName(cat, index))}" aria-describedby="cat-actions-hint" aria-keyshortcuts="Delete Shift+F10">${catIcon}${cats.length > 1 ? `<span>${index + 1}</span>` : ''}</button>`).join('');
+  document.getElementById('cat-tabs').innerHTML = cats.map((cat, index) => `<button type="button" role="tab" id="tab-${cat.id}" aria-controls="${cat.id}" aria-selected="${cat.id === activeId}" tabindex="${cat.id === activeId ? 0 : -1}" data-cat="${cat.id}" data-color="${cat.color}" aria-label="${escapeHtml(catName(cat, index))}" title="${escapeHtml(catName(cat, index))}" aria-describedby="cat-actions-hint" aria-keyshortcuts="Delete Shift+F10">${catIcon}${holdRing}${cats.length > 1 ? `<span>${index + 1}</span>` : ''}</button>`).join('');
   document.getElementById('cat-tabs').setAttribute('aria-label', language === 'en' ? 'Cats' : 'Kediler');
   document.getElementById('add-cat').setAttribute('aria-label', t('Kedi ekle'));
-  document.getElementById('add-cat').title = t('Kedi ekle');
+  document.getElementById('add-cat').title = language === 'en' ? 'Hold for 1.5 seconds to add a cat' : 'Kedi eklemek için 1,5 saniye basılı tutun';
   document.getElementById(`tab-${activeId}`)?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: reducedMotion.matches ? 'instant' : 'smooth' });
 }
 function activateCat(id) {
@@ -244,9 +246,9 @@ function cancelHold() {
   hold = null;
 }
 const catTabs = document.getElementById('cat-tabs');
-catTabs.addEventListener('pointerdown', event => {
+document.querySelector('.cat-navigation').addEventListener('pointerdown', event => {
   if (!event.isPrimary || event.button !== 0) return;
-  const tab = event.target.closest('[data-cat]');
+  const tab = event.target.closest('[data-cat], #add-cat');
   if (!tab) return;
   cancelHold();
   suppressTabClick = false;
@@ -255,12 +257,13 @@ catTabs.addEventListener('pointerdown', event => {
   tab.classList.add('holding');
   current.timer = setTimeout(() => {
     if (hold !== current) return;
-    suppressTabClick = true;
+    suppressTabClick = tab.id !== 'add-cat';
     cancelHold();
-    requestRemoval(tab.dataset.cat);
-  }, 3000);
+    if (tab.id === 'add-cat') addCat();
+    else requestRemoval(tab.dataset.cat);
+  }, tab.id === 'add-cat' ? 1500 : 3000);
 });
-catTabs.addEventListener('contextmenu', event => event.preventDefault());
+document.querySelector('.cat-navigation').addEventListener('contextmenu', event => event.preventDefault());
 document.addEventListener('pointermove', event => {
   if (hold && Math.hypot(event.clientX - hold.x, event.clientY - hold.y) > 10) cancelHold();
 }, { passive: true });
@@ -299,7 +302,7 @@ document.getElementById('cat-tabs').addEventListener('keydown', event => {
   activateCat(cats[next].id);
   document.getElementById(`tab-${activeId}`).focus();
 });
-document.getElementById('add-cat').addEventListener('click', () => {
+function addCat() {
   haptic(12);
   const color = palette.find(color => !cats.some(cat => cat.color === color)) || palette[cats.length % palette.length];
   const cat = newCat(`cat${nextCatId++}`, color);
@@ -307,6 +310,9 @@ document.getElementById('add-cat').addEventListener('click', () => {
   document.getElementById('action-status').textContent = '';
   render(); saveSettings();
   document.getElementById(`${cat.id}-name`).focus();
+}
+document.getElementById('add-cat').addEventListener('click', event => {
+  if (event.detail === 0) addCat();
 });
 document.addEventListener('click', event => {
   if (event.target.closest('.field-info summary')) haptic();
