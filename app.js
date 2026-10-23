@@ -95,7 +95,7 @@ const translations = {
 const t = text => language === 'en' ? translations[text] || text : text;
 function translatePage() {
   document.documentElement.lang = language;
-  document.title = language === 'en' ? 'Cat Food Calculator' : 'Kedi Mama Hesabı';
+  document.title = language === 'en' ? 'MamaPayı · Cat Food Calculator' : 'MamaPayı · Kedi Mama Hesabı';
   document.getElementById('language').value = language;
   document.getElementById('copyright').textContent = `© ${new Date().getFullYear()} Vivid Creative Works · ${language === 'en' ? 'An open-source hobby project.' : 'Açık kaynak bir hobi projesi.'}`;
   setTheme(document.documentElement.dataset.theme);
@@ -124,17 +124,35 @@ function input(cat, key, label, unit, wide = false) {
   return `<div class="field${wide ? ' wide' : ''}"><div class="label-row"><label for="${id}">${label}</label>${hint ? info(label, `<p id="${id}-hint">${t(hint)}</p>`) : ''}</div><div class="input-wrap"><input id="${id}" name="${key}" value="${escapeHtml(cat[key])}" ${key === 'food' ? 'maxlength="200"' : `inputmode="${weight ? 'numeric' : 'decimal'}" maxlength="12"`} autocomplete="off"${hint ? ` aria-describedby="${id}-hint"` : ''}>${unit ? `<span class="unit">${unit}</span>` : ''}</div><p class="error" id="${id}-error" role="alert"></p></div>`;
 }
 function catName(cat, index) { return cat.name.trim() || `${language === 'en' ? 'Cat' : 'Kedi'} ${index + 1}`; }
+function centerActiveTab() {
+  const rail = document.getElementById('cat-tabs');
+  const tab = document.getElementById(`tab-${activeId}`);
+  if (!tab) return;
+  const railBounds = rail.getBoundingClientRect();
+  const tabBounds = tab.getBoundingClientRect();
+  rail.scrollTo({ left: rail.scrollLeft + tabBounds.left - railBounds.left + tabBounds.width / 2 - rail.parentElement.clientWidth / 2, behavior: reducedMotion.matches ? 'instant' : 'smooth' });
+}
 function renderTabs() {
+  const rail = document.getElementById('cat-tabs');
+  const previousScroll = rail.scrollLeft;
+  rail.parentElement.classList.toggle('multiple', cats.length > 1);
   document.getElementById('cat-tabs').innerHTML = cats.map((cat, index) => `<button type="button" role="tab" id="tab-${cat.id}" aria-controls="${cat.id}" aria-selected="${cat.id === activeId}" tabindex="${cat.id === activeId ? 0 : -1}" data-cat="${cat.id}" data-color="${cat.color}" aria-label="${escapeHtml(catName(cat, index))}" title="${escapeHtml(catName(cat, index))}" aria-describedby="cat-actions-hint" aria-keyshortcuts="Delete Shift+F10">${catIcon}${cats.length > 1 ? `<span class="cat-number" aria-hidden="true">${index + 1}</span>` : ''}</button>`).join('');
   document.getElementById('cat-tabs').setAttribute('aria-label', language === 'en' ? 'Cats' : 'Kediler');
   document.getElementById('add-cat').setAttribute('aria-label', t('Kedi ekle'));
   document.getElementById('add-cat').title = t('Kedi ekle');
   document.getElementById('remove-cat').hidden = !canRemove(activeId);
-  document.getElementById(`tab-${activeId}`)?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: reducedMotion.matches ? 'instant' : 'smooth' });
+  rail.scrollLeft = previousScroll;
+  centerActiveTab();
 }
 function activateCat(id) {
   activeId = id;
-  renderTabs();
+  document.querySelectorAll('#cat-tabs [data-cat]').forEach(tab => {
+    const selected = tab.dataset.cat === activeId;
+    tab.setAttribute('aria-selected', selected);
+    tab.tabIndex = selected ? 0 : -1;
+  });
+  document.getElementById('remove-cat').hidden = !canRemove(activeId);
+  centerActiveTab();
   cats.forEach(cat => { document.getElementById(cat.id).hidden = cat.id !== activeId; });
 }
 function showError(card, key, message) {
@@ -284,7 +302,7 @@ deleteDialog.addEventListener('close', () => {
 
 document.getElementById('cat-tabs').addEventListener('click', event => {
   const tab = event.target.closest('[data-cat]');
-  if (tab) { if (tab.dataset.cat !== activeId) haptic(); activateCat(tab.dataset.cat); document.getElementById(`tab-${activeId}`).focus(); }
+  if (tab) { if (tab.dataset.cat !== activeId) haptic(); activateCat(tab.dataset.cat); document.getElementById(`tab-${activeId}`).focus({ preventScroll: true }); }
 });
 document.getElementById('cat-tabs').addEventListener('keydown', event => {
   if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
@@ -292,7 +310,7 @@ document.getElementById('cat-tabs').addEventListener('keydown', event => {
   const index = cats.findIndex(cat => cat.id === activeId);
   const next = event.key === 'Home' ? 0 : event.key === 'End' ? cats.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + cats.length) % cats.length;
   activateCat(cats[next].id);
-  document.getElementById(`tab-${activeId}`).focus();
+  document.getElementById(`tab-${activeId}`).focus({ preventScroll: true });
 });
 function addCat() {
   haptic(12);
@@ -300,9 +318,19 @@ function addCat() {
   const cat = newCat(`cat${nextCatId++}`, color);
   cats.push(cat); activeId = cat.id;
   render(); saveSettings();
-  document.getElementById(`${cat.id}-name`).focus();
+  if (!reducedMotion.matches) {
+    document.getElementById(cat.id).animate([
+      { opacity: 0, transform: 'translateY(10px) scale(.99)' },
+      { opacity: 1, transform: 'translateY(0) scale(1)' }
+    ], { duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    document.getElementById(`tab-${cat.id}`).animate([
+      { opacity: 0, transform: 'scale(.85)' }, { opacity: 1, transform: 'scale(1)' }
+    ], { duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  }
+  document.getElementById(`${cat.id}-name`).focus({ preventScroll: true });
 }
 document.getElementById('add-cat').addEventListener('click', addCat);
+new ResizeObserver(centerActiveTab).observe(document.getElementById('cat-tabs'));
 document.getElementById('remove-cat').addEventListener('click', () => requestRemoval(activeId));
 document.addEventListener('click', event => {
   if (event.target.closest('.field-info summary')) haptic();

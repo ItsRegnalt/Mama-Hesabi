@@ -163,7 +163,11 @@ const { chromium } = require('playwright');
   assert.equal(await touchPage.getByRole('tab').count(), 2);
   assert.equal(await touchPage.locator('#cat2').evaluate(el => getComputedStyle(el).animationName), 'none');
   // Holding an inactive profile only switches to it on release, without removal feedback.
-  await touchPage.mouse.move(firstPoint.x + 20, firstPoint.y + 20);
+  await touchPage.waitForTimeout(350);
+  await first.click();
+  await touchPage.waitForTimeout(350);
+  const currentFirstPoint = await first.boundingBox();
+  await touchPage.mouse.move(currentFirstPoint.x + 20, currentFirstPoint.y + 20);
   await touchPage.mouse.down(); await touchPage.waitForTimeout(600);
   assert.equal(await first.evaluate(el => el.classList.contains('holding')), false);
   await touchPage.mouse.up();
@@ -239,6 +243,39 @@ const { chromium } = require('playwright');
   assert.equal(await touchPage.locator('html').getAttribute('data-theme'), 'dark');
   assert.deepEqual(motionErrors, []);
   await touchContext.close();
+  // First/last tabs must center too, with no vertical jump or focus scroll override.
+  const railContext = await browser.newContext({ viewport: { width: 390, height: 1000 } });
+  const railPage = await railContext.newPage();
+  await railPage.goto('http://localhost:4783');
+  const entry = await railPage.evaluate(() => {
+    document.getElementById('add-cat').click();
+    return document.getElementById('cat2').getAnimations().map(animation => animation.effect.getTiming().duration);
+  });
+  assert.deepEqual(entry, [220]);
+  for (let index = 0; index < 6; index++) await railPage.locator('#add-cat').click();
+  for (const id of ['cat1', 'cat8', 'cat4', 'cat2']) {
+    await railPage.evaluate(id => document.getElementById(`tab-${id}`).click(), id);
+    await railPage.waitForTimeout(550);
+    const offset = await railPage.evaluate(id => {
+      const rail = document.querySelector('.cat-navigation').getBoundingClientRect();
+      const tab = document.getElementById(`tab-${id}`).getBoundingClientRect();
+      return tab.left + tab.width / 2 - rail.left - rail.width / 2;
+    }, id);
+    assert.ok(Math.abs(offset) <= 2, `Centered ${id}: ${offset}`);
+  }
+  await railPage.evaluate(() => ['cat8', 'cat1', 'cat5'].forEach(id => document.getElementById(`tab-${id}`).click()));
+  await railPage.waitForTimeout(550);
+  assert.equal(await railPage.locator('[aria-selected=true]').getAttribute('data-cat'), 'cat5');
+  assert.equal(await railPage.evaluate(() => window.scrollY), 0);
+  await railPage.emulateMedia({ reducedMotion: 'reduce' });
+  assert.equal(await railPage.evaluate(() => {
+    document.getElementById('add-cat').click();
+    return document.getElementById('cat9').getAnimations().length;
+  }), 0);
+  await railPage.screenshot({ path: process.env.TEMP + '/mamapayi-profiles-light.png' });
+  await railPage.locator('#theme-toggle').click();
+  await railPage.screenshot({ path: process.env.TEMP + '/mamapayi-profiles-dark.png' });
+  await railContext.close();
   const hapticContext = await browser.newContext({ reducedMotion: 'no-preference' });
   await hapticContext.addInitScript(() => {
    window.hapticCalls = [];

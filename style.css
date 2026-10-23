@@ -175,3 +175,10 @@ footer { margin-top: 32px; text-align: center; color: var(--muted); font-size: 1
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; }
 }
+
+/* Edge spacers let the first and last profiles reach the rail center too. */
+.cat-navigation.multiple { width: 100%; max-width: 420px; }
+.multiple #cat-tabs { flex: 1; }
+.multiple #cat-tabs::before, .multiple #cat-tabs::after { content: ''; }
+.multiple #cat-tabs::before { flex: 0 0 calc(50% - 8px); }
+.multiple #cat-tabs::after { flex: 0 0 calc(50% - 68px); }
