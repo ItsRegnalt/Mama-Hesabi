@@ -83,7 +83,7 @@ let activeId = cats[storedCats.findIndex(cat => cat.id === saved.activeId)]?.id 
 let nextCatId = cats.length + 1;
 function translatePage() {
   document.documentElement.lang = language;
-  document.title = t('Pati Gram · Kedi Mama Hesabı');
+  document.title = t('PatiGram · Kedi Mama Hesabı');
   document.querySelectorAll('[data-language]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.language === language)));
   document.getElementById('copyright').textContent = `© ${new Date().getFullYear()} Vivid Creative Works · ${t('Açık kaynak bir hobi projesi.')}`;
   document.querySelector('#language summary').setAttribute('aria-label', t('Dil'));
@@ -92,9 +92,9 @@ function translatePage() {
   setTheme(document.documentElement.dataset.theme);
   document.getElementById('install-title').textContent = t('Ana ekrana ekle');
   const installGuides = [
-    ['iPhone · Safari', 'Pati Gram’ı Safari’de aç. Paylaş’a (veya Sayfa Menüsü → Paylaş) dokun → Ana Ekrana Ekle. Görünüyorsa “Web Uygulaması Olarak Aç” seçeneğini açık tut ve Ekle’ye dokun.'],
-    ['iPhone / iPad · Chrome', 'Pati Gram’ı Chrome’da aç. Adres çubuğunun yanındaki Paylaş → Ana Ekrana Ekle → Ekle yolunu izle. Görünüyorsa “Web Uygulaması Olarak Aç” seçeneğini açık tut.'],
-    ['Android · Chrome', 'Pati Gram’ı Chrome’da aç. ⋮ → Yükle ve kısayol oluştur → Yükle yolunu izle ve ekrandaki adımları tamamla. Sürüme göre “Ana ekrana ekle” yazabilir.']
+    ['iPhone · Safari', 'PatiGram’ı Safari’de aç. Paylaş’a (veya Sayfa Menüsü → Paylaş) dokun → Ana Ekrana Ekle. Görünüyorsa “Web Uygulaması Olarak Aç” seçeneğini açık tut ve Ekle’ye dokun.'],
+    ['iPhone / iPad · Chrome', 'PatiGram’ı Chrome’da aç. Adres çubuğunun yanındaki Paylaş → Ana Ekrana Ekle → Ekle yolunu izle. Görünüyorsa “Web Uygulaması Olarak Aç” seçeneğini açık tut.'],
+    ['Android · Chrome', 'PatiGram’ı Chrome’da aç. ⋮ → Yükle ve kısayol oluştur → Yükle yolunu izle ve ekrandaki adımları tamamla. Sürüme göre “Ana ekrana ekle” yazabilir.']
   ];
   const installSources = ['https://support.apple.com/en-gb/guide/iphone/iphea86e5236/ios', 'https://support.google.com/chrome/answer/9658361?co=GENIE.Platform%3DiOS', 'https://support.google.com/chrome/answer/9658361?co=GENIE.Platform%3DAndroid'];
   document.getElementById('install-instructions').innerHTML = installGuides.map(([title, body], i) => `<section><h3>${title}</h3><p>${t(body)}</p><a href="${installSources[i]}" target="_blank" rel="noopener noreferrer">${t('Resmi rehber')} ↗</a></section>`).join('') + `<p class="install-note">${t('Menü adları sistem sürümüne göre değişebilir. iPhone’da seçenek yoksa Safari’yi dene. Ana ekran uygulaması ayrı depolama kullanabilir; profillerini yeniden girmen gerekebilir.')}</p>`;
@@ -328,6 +328,29 @@ function requestRemoval(id) {
   haptic(20);
 }
 const appearanceDialog = document.getElementById('appearance-dialog');
+const appearanceOptions = document.getElementById('appearance-options');
+const appearanceTrack = appearanceDialog.querySelector('.appearance-scrollbar');
+const appearanceThumb = appearanceDialog.querySelector('.appearance-thumb');
+function updateAppearanceScrollbar() {
+  const height = appearanceTrack.clientHeight;
+  const thumbHeight = height * appearanceOptions.clientHeight / Math.max(1, appearanceOptions.scrollHeight);
+  appearanceThumb.style.height = `${thumbHeight}px`;
+  appearanceThumb.style.transform = `translateY(${appearanceOptions.scrollTop / Math.max(1, appearanceOptions.scrollHeight - appearanceOptions.clientHeight) * (height - thumbHeight)}px)`;
+}
+appearanceOptions.addEventListener('scroll', updateAppearanceScrollbar);
+new ResizeObserver(updateAppearanceScrollbar).observe(appearanceOptions);
+function scrollAppearanceAt(event) {
+  const bounds = appearanceTrack.getBoundingClientRect();
+  const thumbHeight = appearanceThumb.getBoundingClientRect().height;
+  appearanceOptions.scrollTop = (event.clientY - bounds.top - thumbHeight / 2) / Math.max(1, bounds.height - thumbHeight) * (appearanceOptions.scrollHeight - appearanceOptions.clientHeight);
+}
+appearanceTrack.addEventListener('pointerdown', event => {
+  appearanceTrack.setPointerCapture(event.pointerId);
+  scrollAppearanceAt(event);
+});
+appearanceTrack.addEventListener('pointermove', event => {
+  if (appearanceTrack.hasPointerCapture(event.pointerId)) scrollAppearanceAt(event);
+});
 let appearanceScrollY = 0;
 appearanceDialog.addEventListener('close', () => {
   if (appearanceDialog.open || !document.body.classList.contains('appearance-open')) return;
@@ -347,7 +370,10 @@ function openAppearance() {
   document.body.style.setProperty('--page-scroll-offset', `${-appearanceScrollY}px`);
   document.body.classList.add('appearance-open');
   appearanceDialog.showModal();
-  appearanceDialog.querySelector('[aria-pressed="true"]').focus({ preventScroll: true });
+  const selected = appearanceDialog.querySelector('[aria-pressed="true"]');
+  selected.focus({ preventScroll: true });
+  appearanceOptions.scrollTop = Math.floor([...appearanceOptions.children].indexOf(selected) / 3) * 94;
+  updateAppearanceScrollbar();
 }
 document.getElementById('appearance-options').addEventListener('click', async event => {
   const option = event.target.closest('[data-appearance]');

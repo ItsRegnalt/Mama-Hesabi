@@ -20,9 +20,9 @@ files['/cat-special.png'] = ['cat-special.png', 'image/png'];
 files['/cat-portraits.png'] = ['cat-portraits.png', 'image/png'];
 files['/apple-touch-icon.png'] = ['apple-touch-icon.png', 'image/png'];
 for (const weight of [400, 600, 700]) files[`/nunito-${weight}.ttf`] = [`nunito-${weight}.ttf`, 'font/ttf'];
-server.on('error', error => { console.error(error.code === 'EADDRINUSE' ? '4783 portu kullanimda. Acik Mama Payi penceresini kontrol et.' : error.message); process.exitCode = 1; });
+server.on('error', error => { console.error(error.code === 'EADDRINUSE' ? '4783 portu kullanimda. Acik PatiGram penceresini kontrol et.' : error.message); process.exitCode = 1; });
 server.listen(4783, '0.0.0.0', () => {
-  console.log('Mama Payi acik. Kapatmak icin Ctrl+C.\nBilgisayar: http://localhost:4783');
+  console.log('PatiGram acik. Kapatmak icin Ctrl+C.\nBilgisayar: http://localhost:4783');
   for (const addresses of Object.values(os.networkInterfaces())) for (const address of addresses || []) {
     if (address.family === 'IPv4' && !address.internal) console.log(`iPhone (ayni Wi-Fi): http://${address.address}:4783`);
   }
