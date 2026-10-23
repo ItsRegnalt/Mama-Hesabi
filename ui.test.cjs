@@ -79,7 +79,7 @@ const { chromium } = require('playwright');
    assert.equal(await page.locator('#tab-cat1 + .profile-name').innerText(), 'Örnek <kedi>');
    assert.equal(await page.locator('#tab-cat1 + .profile-name kedi').count(), 0);
    await page.locator('#tab-cat1').click();
-   assert.equal(await page.locator('#appearance-options button').count(), 21);
+   assert.equal(await page.locator('#appearance-options button').count(), 12);
    await page.locator('[data-appearance=black]').click();
    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('mama-payi-v3')).cats[0].appearance), 'black');
    assert.equal(await page.locator('#tab-cat1 .cat-portrait').getAttribute('viewBox'), '926 474 320 320');
@@ -407,17 +407,6 @@ const { chromium } = require('playwright');
   const appearanceContext = await browser.newContext({ viewport: { width: 390, height: 1000 }, reducedMotion: 'no-preference' });
   const appearancePage = await appearanceContext.newPage();
   await appearancePage.goto('http://localhost:4783');
-  for (const appearance of ['angora', 'van', 'anatolian', 'garfield', 'puss', 'grumpy', 'smudge', 'bingus', 'beluga']) {
-   await appearancePage.locator('#tab-cat1').click();
-   await appearancePage.locator('[data-appearance=' + appearance + ']').click();
-   await appearancePage.reload();
-   assert.equal(await appearancePage.evaluate(() => JSON.parse(localStorage.getItem('mama-payi-v3')).cats[0].appearance), appearance);
-   const asset = await appearancePage.locator('#tab-cat1 image').getAttribute('href');
-   assert.ok(await appearancePage.evaluate(async asset => {
-    const image = new Image(); image.src = asset;
-    try { await image.decode(); return image.naturalWidth === 1254; } catch { return false; }
-   }, asset), 'New portrait loads: ' + appearance);
-  }
   for (let i = 0; i < 5; i++) await appearancePage.locator('#add-cat').click();
   await appearancePage.waitForTimeout(600);
   await appearancePage.locator('#language summary').click();

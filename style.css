@@ -270,5 +270,3 @@ footer { margin-top: 16px; text-align: left; color: var(--muted); font-size: 12p
 @media (prefers-reduced-motion: no-preference) {
   #install-help[open] > #install-instructions { animation: surface-in 200ms var(--ease-out); }
 }
-
-.appearance-group { grid-column: 1 / -1; margin: 12px 0 0; font-size: 13px; color: var(--muted); }
