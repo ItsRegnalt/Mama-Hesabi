@@ -41,7 +41,7 @@ let cats = defaults.map(cat => {
 const translations = {
 'Hayvan adı':'Cat name','Besleme yöntemi':'Feeding method','Otomat':'Automatic feeder','Elle besleme':'Manual feeding','Günlük mama miktarı':'Daily food amount','gram / gün':'grams / day','Mevcut ağırlık':'Current weight','RER katsayısı':'RER multiplier','İdeal ağırlık (isteğe bağlı)':'Ideal weight (optional)','Mama adı':'Food name','Mamanın enerji değeri':'Food energy','Otomat porsiyonu':'Feeder portion','Günlük porsiyon':'Daily portions','porsiyon':'portions','Açık':'Light','Koyu':'Dark',
 '0,8× · Kilo verme':'0.8× · Weight loss','1× · Koruma / düşük aktivite':'1× · Maintenance / low activity','1,2× · Kısır yetişkin':'1.2× · Neutered adult','1,4× · Kısır olmayan yetişkin':'1.4× · Intact adult','1,8× · Kilo alma':'1.8× · Weight gain','2× · Yavru, 4–12 ay':'2× · Kitten, 4–12 months','2,5× · Yavru, 0–4 ay':'2.5× · Kitten, 0–4 months',
-'Hesaplamada ideal ağırlık esas alınır.':'Calculation uses ideal weight.','İdeal ağırlık belirtilmedi. Mevcut ağırlık esas alınır.':'Ideal weight is blank. Calculation uses current weight.','Hesaplamak için aşağıdaki değeri düzelt.':'Enter a valid value below to calculate.',
+'Hesaplamada ideal ağırlık esas alınır.':'Calculation uses ideal weight.','İdeal ağırlık belirtilmedi. Mevcut ağırlık esas alınır.':'Ideal weight is blank. Calculation uses current weight.','Hesaplamak için aşağıdaki değeri düzelt.':'Enter a valid value below to calculate.','Ağırlık ve mama enerjisini gir.':'Enter weight and food energy.','Otomat porsiyonunu gir.':'Enter the feeder portion.',
 'Ağırlık 0’dan büyük, en fazla 30.000 gram olmalı.':'Weight must be above 0 and at most 30,000 grams.','RER katsayısı 0’dan büyük, en fazla 5 olmalı.':'RER multiplier must be above 0 and at most 5.','Mama enerjisi 0’dan büyük, en fazla 10.000 kcal/kg olmalı.':'Food energy must be above 0 and at most 10,000 kcal/kg.','İdeal ağırlık 0’dan büyük, en fazla 30.000 gram olmalı.':'Ideal weight must be above 0 and at most 30,000 grams.','Bir porsiyon 0’dan büyük, en fazla 100 g olmalı.':'Feeder portion must be above 0 and at most 100 g.'
 };
 const t = text => language === 'en' ? translations[text] || text : text;
@@ -106,10 +106,12 @@ function update() {
       document.getElementById(`${cat.id}-error`).textContent = '';
     } catch (error) {
 
-      set('grams', '—'); set('meta', t('Hesaplamak için aşağıdaki değeri düzelt.')); set('portions', '—'); set('rounding', '');
-      document.getElementById(`${cat.id}-error`).textContent = t(error.message);
+      set('grams', '—'); set('portions', '—'); set('rounding', '');
       const key = error.message.startsWith('Bir porsiyon') ? 'portion' : error.message.startsWith('Mama') ? 'calories' : error.message.startsWith('İdeal') ? 'ideal' : error.message.startsWith('RER') ? 'factor' : 'weight';
-      card.querySelector(`[name="${key}"]`).setAttribute('aria-invalid', 'true');
+      const empty = String(cat[key]).trim() === '';
+      set('meta', t(empty ? (key === 'portion' ? 'Otomat porsiyonunu gir.' : 'Ağırlık ve mama enerjisini gir.') : 'Hesaplamak için aşağıdaki değeri düzelt.'));
+      document.getElementById(`${cat.id}-error`).textContent = empty ? '' : t(error.message);
+      if (!empty) card.querySelector(`[name="${key}"]`).setAttribute('aria-invalid', 'true');
     }
   }
 }
