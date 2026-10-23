@@ -81,7 +81,7 @@ option { color: var(--ink); background: var(--paper); }
 .ideal-note { color: var(--muted); }
 .portion-box { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--line); }
 .portion-result { font-size: 13px; color: var(--muted); }
-.portion-value { height: 48px; display: flex; align-items: baseline; gap: 6px; padding-top: 6px; }
+.portion-value { height: 48px; display: flex; align-items: center; gap: 6px; }
 .portion-result strong { font-size: 24px; color: var(--accent); font-variant-numeric: tabular-nums; }
 .portion-rounding { grid-column: 1 / -1; margin: 0; font-size: 13px; line-height: 1.6; color: var(--muted); }
 .error { font-size: 13px; color: var(--error); line-height: 1.6; margin: 16px 0 0; }
@@ -108,8 +108,9 @@ option { color: var(--ink); background: var(--paper); }
 #cat-tabs [aria-selected=true] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 #add-cat { flex-shrink: 0; width: 44px; height: 44px; padding: 0; border-radius: 50%; }
 .cat-navigation button:focus-visible, summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
-.label-row { display: flex; align-items: center; position: relative; min-height: 44px; margin-bottom: 4px; }
+.label-row { display: flex; align-items: center; position: relative; min-height: 20px; margin-bottom: 8px; }
 .label-row label { margin: 0; }
+.label-row:has(.field-info) { min-height: 44px; margin-bottom: 4px; }
 .field-info { margin-left: 2px; }
 .field-info summary { display: grid; place-items: center; width: 44px; height: 44px; cursor: pointer; list-style: none; color: var(--muted); border-radius: 8px; }
 .field-info summary::-webkit-details-marker { display: none; }
@@ -132,3 +133,43 @@ footer { margin-top: 32px; text-align: center; color: var(--muted); font-size: 1
 .dialog-actions button { min-width: 88px; min-height: 44px; padding: 8px 16px; font: inherit; border: 1px solid var(--border); border-radius: 10px; background: var(--paper); color: var(--ink); cursor: pointer; }
 #delete-yes { color: var(--error); }
 .dialog-actions button:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+
+/* Motion follows system accessibility settings; layout stays usable without it. */
+:root { --ease-out: cubic-bezier(.22, 1, .36, 1); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+#theme-toggle { overflow: hidden; }
+#cat-tabs button { position: relative; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: pan-x pan-y; overflow: hidden; }
+#cat-tabs button::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--accent); transform: scaleX(0); transform-origin: left; }
+#cat-tabs button.holding::after { animation: hold-progress 3s linear forwards; }
+#cat-tabs button.holding { transform: scale(.94); }
+@keyframes hold-progress { to { transform: scaleX(1); } }
+@keyframes surface-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes icon-out { to { opacity: 0; transform: translateY(-18px) rotate(25deg); } }
+@keyframes icon-in { from { opacity: 0; transform: translateY(18px) rotate(-25deg); } to { opacity: 1; transform: translateY(0) rotate(0); } }
+::view-transition-image-pair(root) { isolation: auto; }
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-new(root) { z-index: 2; }
+::view-transition-old(root) { z-index: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  button, .input-wrap, .language-control { transition: transform 140ms var(--ease-out), background-color 220ms ease, border-color 220ms ease, box-shadow 220ms ease; }
+  button:active, .language-control:active { transform: scale(.95); }
+  #theme-toggle svg:not([hidden]) { view-transition-name: theme-icon; animation: icon-in 380ms var(--ease-out) both; }
+  ::view-transition-group(theme-icon) { z-index: 3; overflow: clip; }
+  ::view-transition-old(theme-icon) { animation: icon-out 260ms var(--ease-out) both; }
+  ::view-transition-new(theme-icon) { animation: icon-in 380ms var(--ease-out) both; }
+  .cat:not([hidden]) { animation: surface-in 280ms var(--ease-out) both; }
+  .field-info[open] .info-content { animation: surface-in 200ms var(--ease-out) both; }
+  #delete-dialog { opacity: 0; transform: translateY(12px) scale(.97); transition: opacity 180ms ease, transform 240ms var(--ease-out), display 240ms allow-discrete, overlay 240ms allow-discrete; }
+  #delete-dialog[open] { opacity: 1; transform: translateY(0) scale(1); }
+  #delete-dialog::backdrop { background: #0000; transition: background-color 240ms ease, display 240ms allow-discrete, overlay 240ms allow-discrete; }
+  #delete-dialog[open]::backdrop { background: #0008; }
+  @starting-style {
+    #delete-dialog[open] { opacity: 0; transform: translateY(12px) scale(.97); }
+    #delete-dialog[open]::backdrop { background: #0000; }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; }
+  #cat-tabs button.holding { transform: none; }
+  #cat-tabs button.holding::after { animation: none; transform: scaleX(1); opacity: .6; }
+}
