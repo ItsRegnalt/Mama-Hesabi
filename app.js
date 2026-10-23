@@ -100,7 +100,7 @@ function translatePage() {
   document.getElementById('copyright').textContent = `© ${new Date().getFullYear()} Vivid Creative Works · ${language === 'en' ? 'An open-source hobby project.' : 'Açık kaynak bir hobi projesi.'}`;
   setTheme(document.documentElement.dataset.theme);
   for (const [id, text] of [['delete-question', 'Bu kedi profilini kaldırmak ister misin?'], ['delete-no', 'Hayır'], ['delete-yes', 'Evet']]) document.getElementById(id).textContent = t(text);
-  document.getElementById('cat-actions-hint').textContent = language === 'en' ? 'Hold the selected cat icon to remove its profile. The first profile is protected. Keyboard: Delete.' : 'Kaldırmak için seçili kedi simgesine basılı tutun. İlk profil korunur. Klavye: Delete.';
+  document.getElementById('cat-actions-hint').textContent = language === 'en' ? 'Choose a cat profile. Use the button below the form to remove the selected profile. The first profile is protected.' : 'Kedi profilini seçin. Seçili profili kaldırmak için formun altındaki butonu kullanın. İlk profil korunur.';
   document.getElementById('remove-cat').textContent = language === 'en' ? 'Remove cat profile' : 'Kedi profilini kaldır';
   document.getElementById('cats').setAttribute('aria-label', language === 'en' ? 'Cat feeding settings' : 'Kedi beslenme ayarları');
   const walker = document.createTreeWalker(document.getElementById('cats'), NodeFilter.SHOW_TEXT);
@@ -114,7 +114,6 @@ const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({ '&
 const factors = [['0.8', '0,8× · Kilo verme'], ['1', '1× · Kiloyu koruma'], ['1.2', '1,2× · Kısır yetişkin'], ['1.4', '1,4× · Kısır olmayan yetişkin'], ['1.8', '1,8× · Kilo alma'], ['2', '2× · Yavru, 4–12 ay'], ['2.5', '2,5× · Yavru, 0–4 ay']];
 const infoIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></svg>';
 const catIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10V3l6 4h4l6-4v7c1 2 1 5-1 7-3 4-11 4-14 0-2-2-2-5-1-7Z"/><path d="M8 12h.1m7.8 0h.1M10 15l2 1 2-1m-2 1v2M3 14l4 1m10 0 4-1"/></svg>';
-const holdRing = '<svg class="hold-ring" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19" pathLength="1"/></svg>';
 function info(label, content) {
   return `<details class="field-info"><summary aria-label="${escapeHtml(t(label))} — ${t('Bilgi')}">${infoIcon}</summary><div class="info-content">${content}</div></details>`;
 }
@@ -126,7 +125,7 @@ function input(cat, key, label, unit, wide = false) {
 }
 function catName(cat, index) { return cat.name.trim() || `${language === 'en' ? 'Cat' : 'Kedi'} ${index + 1}`; }
 function renderTabs() {
-  document.getElementById('cat-tabs').innerHTML = cats.map((cat, index) => `<button type="button" role="tab" id="tab-${cat.id}" aria-controls="${cat.id}" aria-selected="${cat.id === activeId}" tabindex="${cat.id === activeId ? 0 : -1}" data-cat="${cat.id}" data-color="${cat.color}" aria-label="${escapeHtml(catName(cat, index))}" title="${escapeHtml(catName(cat, index))}" aria-describedby="cat-actions-hint" aria-keyshortcuts="Delete Shift+F10">${catIcon}${holdRing}${cats.length > 1 ? `<span>${index + 1}</span>` : ''}</button>`).join('');
+  document.getElementById('cat-tabs').innerHTML = cats.map((cat, index) => `<button type="button" role="tab" id="tab-${cat.id}" aria-controls="${cat.id}" aria-selected="${cat.id === activeId}" tabindex="${cat.id === activeId ? 0 : -1}" data-cat="${cat.id}" data-color="${cat.color}" aria-label="${escapeHtml(catName(cat, index))}" title="${escapeHtml(catName(cat, index))}" aria-describedby="cat-actions-hint" aria-keyshortcuts="Delete Shift+F10">${catIcon}${cats.length > 1 ? `<span class="cat-number" aria-hidden="true">${index + 1}</span>` : ''}</button>`).join('');
   document.getElementById('cat-tabs').setAttribute('aria-label', language === 'en' ? 'Cats' : 'Kediler');
   document.getElementById('add-cat').setAttribute('aria-label', t('Kedi ekle'));
   document.getElementById('add-cat').title = t('Kedi ekle');
@@ -134,7 +133,6 @@ function renderTabs() {
   document.getElementById(`tab-${activeId}`)?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: reducedMotion.matches ? 'instant' : 'smooth' });
 }
 function activateCat(id) {
-  cancelHold();
   activeId = id;
   renderTabs();
   cats.forEach(cat => { document.getElementById(cat.id).hidden = cat.id !== activeId; });
@@ -250,39 +248,7 @@ function requestRemoval(id) {
   deleteDialog.showModal();
   haptic(20);
 }
-let hold = null;
-let suppressTabClick = false;
-function cancelHold() {
-  if (!hold) return;
-  clearTimeout(hold.timer);
-  hold.tab.classList.remove('holding');
-  hold = null;
-}
 const catTabs = document.getElementById('cat-tabs');
-document.querySelector('.cat-navigation').addEventListener('pointerdown', event => {
-  if (!event.isPrimary || event.button !== 0) return;
-  const tab = event.target.closest('[data-cat], #add-cat');
-  if (!tab) return;
-  cancelHold();
-  suppressTabClick = false;
-  if (!canRemove(tab.dataset.cat)) return;
-  const current = { tab, x: event.clientX, y: event.clientY };
-  hold = current;
-  tab.classList.add('holding');
-  current.timer = setTimeout(() => {
-    if (hold !== current) return;
-    suppressTabClick = true;
-    cancelHold();
-    requestRemoval(tab.dataset.cat);
-  }, 500);
-});
-document.querySelector('.cat-navigation').addEventListener('contextmenu', event => event.preventDefault());
-document.addEventListener('pointermove', event => {
-  if (hold && Math.hypot(event.clientX - hold.x, event.clientY - hold.y) > 10) cancelHold();
-}, { passive: true });
-for (const event of ['pointerup', 'pointercancel', 'scroll']) document.addEventListener(event, cancelHold, { passive: true, capture: true });
-window.addEventListener('blur', cancelHold);
-document.addEventListener('visibilitychange', cancelHold);
 catTabs.addEventListener('keydown', event => {
   if (event.key !== 'Delete' && !(event.shiftKey && event.key === 'F10')) return;
   const tab = event.target.closest('[data-cat]');
@@ -318,7 +284,6 @@ deleteDialog.addEventListener('close', () => {
 
 document.getElementById('cat-tabs').addEventListener('click', event => {
   const tab = event.target.closest('[data-cat]');
-  if (suppressTabClick && event.detail !== 0) { event.preventDefault(); suppressTabClick = false; return; }
   if (tab) { if (tab.dataset.cat !== activeId) haptic(); activateCat(tab.dataset.cat); document.getElementById(`tab-${activeId}`).focus(); }
 });
 document.getElementById('cat-tabs').addEventListener('keydown', event => {
