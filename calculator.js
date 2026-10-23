@@ -5,12 +5,15 @@
     return /^\d+(?:[.,]\d+)?$/.test(text) ? Number(text.replace(',', '.')) : NaN;
   }
   function calculate(cat) {
+    const weightText = String(cat.weight ?? '').trim();
+    if (weightText && !/^\d+$/.test(weightText)) throw new Error('Ağırlığı tam gram olarak gir. Örn. 3280.');
     const weight = number(cat.weight) / 1000, factor = number(cat.factor), density = number(cat.calories);
     if (!(weight > 0 && weight <= 30)) throw new Error('Ağırlık 0’dan büyük, en fazla 30.000 gram olmalı.');
     if (!(factor > 0 && factor <= 5)) throw new Error('RER katsayısı 0’dan büyük, en fazla 5 olmalı.');
     if (!(density > 0 && density <= 10000)) throw new Error('Mama enerjisi 0’dan büyük, en fazla 10.000 kcal/kg olmalı.');
     const needsIdeal = factor === 0.8 || factor === 1.8;
     const hasIdeal = needsIdeal && String(cat.ideal ?? '').trim() !== '';
+    if (hasIdeal && !/^\d+$/.test(String(cat.ideal).trim())) throw new Error('Hedef ağırlığı tam gram olarak gir. Örn. 4000.');
     const ideal = hasIdeal ? number(cat.ideal) / 1000 : weight;
     if (!(ideal > 0 && ideal <= 30)) throw new Error('İdeal ağırlık 0’dan büyük, en fazla 30.000 gram olmalı.');
     const rer = 70 * ideal ** 0.75, energy = rer * factor, grams = energy / (density / 1000);

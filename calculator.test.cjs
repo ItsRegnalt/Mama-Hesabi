@@ -17,3 +17,7 @@ for (const [key, value] of [['weight', '0'], ['weight', '-2'], ['weight', '30001
 }
 console.log('Hesap testleri geçti: ayrı mamalar, ideal kilo, virgüllü sayılar ve geçersiz girdiler.');
 
+
+for (const weight of ['3.280', '3,280', '3.28', '3,28']) assert.throws(() => calculate({ ...manualCat, weight }), /tam gram/);
+assert.throws(() => calculate({ ...automaticCat, ideal: '4.000' }), /tam gram/);
+assert.equal(calculate({ ...automaticCat, ideal: '' }).referenceWeight, 8);
