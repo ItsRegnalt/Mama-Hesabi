@@ -13,6 +13,7 @@ const server = http.createServer((req, res) => {
     res.end(data);
   });
 });
+files['/favicon.svg'] = ['favicon.svg', 'image/svg+xml'];
 files['/manifest.webmanifest'] = ['manifest.webmanifest', 'application/manifest+json'];
 for (const name of ['favicon.png', 'icon-192.png', 'icon-512.png']) files[`/${name}`] = [name, 'image/png'];
 files['/cat-special.png'] = ['cat-special.png', 'image/png'];
@@ -26,3 +27,4 @@ server.listen(4783, '0.0.0.0', () => {
     if (address.family === 'IPv4' && !address.internal) console.log(`iPhone (ayni Wi-Fi): http://${address.address}:4783`);
   }
 });
+

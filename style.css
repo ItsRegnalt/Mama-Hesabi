@@ -117,11 +117,11 @@ option { color: var(--ink); background: var(--paper); }
 #cat-tabs [aria-selected=true] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 #cat-tabs .customize-icon { position: absolute; left: 50%; top: 50%; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--control-gray); color: var(--ink); opacity: 0; transform: translate(-50%, -50%) scale(.9); pointer-events: none; }
 #cat-tabs .customize-icon svg { width: 16px; height: 16px; }
-#cat-tabs [aria-selected=true]:focus-visible, #cat-tabs [aria-selected=true]:active { background: var(--control-gray); }
-#cat-tabs [aria-selected=true]:is(:focus-visible,:active) .customize-icon { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+#cat-tabs [aria-selected=true]:not(.customize-dismissed):focus-visible, #cat-tabs [aria-selected=true]:not(.customize-dismissed):active { background: var(--control-gray); }
+#cat-tabs [aria-selected=true]:not(.customize-dismissed):is(:focus-visible,:active) .customize-icon { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 @media (hover: hover) {
-  #cat-tabs [aria-selected=true]:hover { background: var(--control-gray); }
-  #cat-tabs [aria-selected=true]:hover .customize-icon { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  #cat-tabs [aria-selected=true]:not(.customize-dismissed):hover { background: var(--control-gray); }
+  #cat-tabs [aria-selected=true]:not(.customize-dismissed):hover .customize-icon { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 #add-cat { flex-shrink: 0; width: 52px; height: 52px; padding: 0; border-radius: 50%; }
 .cat-navigation button:focus-visible, summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
@@ -242,7 +242,7 @@ body.appearance-open { position: fixed; top: var(--page-scroll-offset); width: 1
 @media (hover: hover) {
   #add-cat:hover, .language-control > summary:hover, .language-menu button:hover { background: var(--control-gray); }
   .language-menu button:hover { box-shadow: inset 0 0 0 1px var(--border); }
-  #cat-tabs [aria-selected=true]:hover .cat-portrait { opacity: .3; }
+  #cat-tabs [aria-selected=true]:not(.customize-dismissed):hover .cat-portrait { opacity: .3; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .theme-thumb { transition: transform 280ms cubic-bezier(.22,1,.36,1); view-transition-name: theme-thumb; }

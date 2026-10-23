@@ -354,8 +354,10 @@ document.getElementById('appearance-options').addEventListener('click', async ev
   const cat = cats.find(cat => cat.id === activeId);
   if (!option || !cat) return;
   cat.appearance = option.dataset.appearance;
-  saveSettings(); haptic(); appearanceDialog.close();
   const tab = document.getElementById(`tab-${cat.id}`);
+  // Dialog focus restoration must not leave the edit affordance over the portrait.
+  tab.classList.add("customize-dismissed");
+  saveSettings(); haptic(); appearanceDialog.close();
   const old = tab.querySelector('.cat-portrait');
   if (!reducedMotion.matches) await old.animate({opacity:[1,0]}, {duration:100,fill:'forwards'}).finished.catch(() => {});
   if (!tab.isConnected) return;
@@ -363,7 +365,11 @@ document.getElementById('appearance-options').addEventListener('click', async ev
   if (!reducedMotion.matches) tab.querySelector('svg').animate({opacity:[0,1]}, {duration:180,easing:'ease-out'});
 });
 const catTabs = document.getElementById('cat-tabs');
+catTabs.addEventListener('pointermove', event => {
+  if (event.pointerType === 'mouse') event.target.closest('[data-cat]')?.classList.remove('customize-dismissed');
+});
 catTabs.addEventListener('keydown', event => {
+  event.target.closest('[data-cat]')?.classList.remove('customize-dismissed');
   if (event.key !== 'Delete' && !(event.shiftKey && event.key === 'F10')) return;
   const tab = event.target.closest('[data-cat]');
   if (tab) { event.preventDefault(); requestRemoval(tab.dataset.cat); }

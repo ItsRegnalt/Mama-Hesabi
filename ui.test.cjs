@@ -230,6 +230,15 @@ const { chromium } = require('playwright');
    assert.ok(await done.isHidden());
    assert.equal(await input.inputValue(), value);
   }
+  // A chosen portrait must stay unobstructed after native dialog focus restoration.
+  for (const appearance of ['ginger', 'tabby']) {
+   await touchPage.locator('#tab-cat1').tap();
+   await touchPage.locator(`[data-appearance="${appearance}"]`).tap();
+   await touchPage.locator('#appearance-dialog').waitFor({ state: 'hidden' });
+   await touchPage.waitForTimeout(350);
+   await touchPage.locator('#tab-cat1').focus();
+   assert.equal(await touchPage.locator('#tab-cat1 .customize-icon').evaluate(el => getComputedStyle(el).opacity), '0');
+  }
   const add = touchPage.locator('#add-cat');
   const first = touchPage.locator('#tab-cat1');
   const firstPoint = await first.boundingBox();
