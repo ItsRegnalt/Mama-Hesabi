@@ -15,7 +15,7 @@ let manualTheme = themeChoice !== null;
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
   document.querySelectorAll('[data-theme-choice]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.themeChoice === theme)));
-  document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#242b30' : '#f5fffa';
+  document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#121212' : '#f2f3f7';
 }
 setTheme(themeChoice || (systemTheme.matches ? 'dark' : 'light'));
 systemTheme.addEventListener('change', event => { if (!manualTheme) setTheme(event.matches ? 'dark' : 'light'); });
