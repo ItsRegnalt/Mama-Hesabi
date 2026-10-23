@@ -104,7 +104,7 @@ const translations = {
 const t = text => language === 'en' ? translations[text] || text : text;
 function translatePage() {
   document.documentElement.lang = language;
-  document.title = language === 'en' ? 'MamaPayı · Cat Food Calculator' : 'MamaPayı · Kedi Mama Hesabı';
+  document.title = language === 'en' ? 'Pati Gram · Cat Food Calculator' : 'Pati Gram · Kedi Mama Hesabı';
   document.getElementById('language').value = language;
   document.getElementById('copyright').textContent = `© ${new Date().getFullYear()} Vivid Creative Works · ${language === 'en' ? 'An open-source hobby project.' : 'Açık kaynak bir hobi projesi.'}`;
   setTheme(document.documentElement.dataset.theme);

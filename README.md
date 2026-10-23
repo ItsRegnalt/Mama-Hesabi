@@ -1,4 +1,4 @@
-# MamaPayı
+# Pati Gram
 
 Kedi adı, gram cinsinden ağırlık ve kcal/kg cinsinden enerji değeriyle günlük mama miktarını hesaplar. RER çarpanı, elle besleme ve otomat porsiyonu seçenekleri sunar. Türkçe / İngilizce ve açık / koyu tema desteklenir.
 
