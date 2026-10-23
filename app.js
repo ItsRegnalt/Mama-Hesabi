@@ -77,6 +77,15 @@ const canRemove = id => id === activeId && id !== defaultCatId && cats.some(cat 
 let activeId = cats[0]?.id || null;
 let nextCatId = cats.length + 1;
 const translations = {
+'Tahmini günlük mama miktarı':'Estimated daily food amount',
+'RER, dinlenirken gereken enerjidir. Katsayıyı kedinin yaşına ve durumuna göre seç.':'RER is energy needed at rest. Choose a multiplier for your cat’s age and condition.',
+'1× düşük aktivite; 1,2× kısır yetişkin; yavrular için yaş aralığını seç.':'1× for low activity; 1.2× for neutered adults; choose the age range for kittens.',
+'0,8× ve 1,8× hedef ağırlığı kullanır; hedef boşsa mevcut ağırlık kullanılır.':'0.8× and 1.8× use target weight; a blank target uses current weight.',
+'Bu bir başlangıç tahminidir; miktarı kilo takibi ve veteriner önerisiyle ayarla.':'This is a starting estimate; adjust with weight monitoring and veterinary advice.',
+'Pakette “metabolize edilebilir enerji” veya “ME” satırındaki kcal/kg değerini bul.':'Find kcal/kg under “metabolizable energy” or “ME” on the package.',
+'Örnek: 350 kcal/100 g yazıyorsa 3500 gir.':'Example: if it says 350 kcal/100 g, enter 3500.',
+'Veteriner kaynağı':'Veterinary reference',
+
 'Bu kedi profilini kaldırmak ister misin?':'Would you like to remove this cat profile?','Evet':'Yes','Hayır':'No','Kedi profili kaldırıldı.':'Cat profile removed.',
 'Kedi ekle':'Add cat','Tam gram: 3280.':'Whole grams: 3280.','Paketteki kcal/kg.':'Package kcal/kg.','Boşsa mevcut ağırlık.':'Blank uses current weight.','Bilgi':'Information','Girdiğiniz bilgiler cihazınızda saklanır.':'Your information is stored on your device.','Profili kaldır':'Remove profile','Hesaplama ayrıntısı':'Calculation details',
 'Çarpan, hesaplanan kaloriyi değiştirir: 1× aynı tutar, 0,8× %20 azaltır, 1,2× %20 artırır.':'The multiplier adjusts calculated calories: 1× keeps them unchanged, 0.8× reduces them by 20%, and 1.2× increases them by 20%.',
@@ -113,15 +122,20 @@ const format = (value, digits = 1) => value.toLocaleString(language === 'en' ? '
 const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 const factors = [['0.8', '0,8× · Kilo verme'], ['1', '1× · Kiloyu koruma'], ['1.2', '1,2× · Kısır yetişkin'], ['1.4', '1,4× · Kısır olmayan yetişkin'], ['1.8', '1,8× · Kilo alma'], ['2', '2× · Yavru, 4–12 ay'], ['2.5', '2,5× · Yavru, 0–4 ay']];
 const infoIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></svg>';
-const catIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10V3l6 4h4l6-4v7c1 2 1 5-1 7-3 4-11 4-14 0-2-2-2-5-1-7Z"/><path d="M8 12h.1m7.8 0h.1M10 15l2 1 2-1m-2 1v2M3 14l4 1m10 0 4-1"/></svg>';
+const catBaseIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10V3l6 4h4l6-4v7c1 2 1 5-1 7-3 4-11 4-14 0-2-2-2-5-1-7Z"/><path d="M8 12h.1m7.8 0h.1M10 15l2 1 2-1m-2 1v2M3 14l4 1m10 0 4-1"/></svg>';
+// Preset markings complement the six profile colors without relying on color alone.
+const catMarkings = ['', 'M10 8h4', 'M12 7v3', 'M7 9l2 1m8-1-2 1', 'M10 8l2 2 2-2', 'M9 8l1 1m4 0 1-1'];
+function catIcon(cat) {
+  return catBaseIcon.replace('</svg>', `<path class="cat-marking" d="${catMarkings[palette.indexOf(cat.color)]}"/></svg>`);
+}
 function info(label, content) {
   return `<details class="field-info"><summary aria-label="${escapeHtml(t(label))} — ${t('Bilgi')}">${infoIcon}</summary><div class="info-content">${content}</div></details>`;
 }
 function input(cat, key, label, unit, wide = false) {
   const id = `${cat.id}-${key}`;
   const weight = key === 'weight' || key === 'ideal';
-  const hint = key === 'calories' ? 'Paketteki kcal/kg.' : '';
-  return `<div class="field${wide ? ' wide' : ''}"><div class="label-row"><label for="${id}">${label}</label>${hint ? info(label, `<p id="${id}-hint">${t(hint)}</p>`) : ''}</div><div class="input-wrap"><input id="${id}" name="${key}" value="${escapeHtml(cat[key])}" ${key === 'food' ? 'maxlength="200"' : `inputmode="${weight ? 'numeric' : 'decimal'}" maxlength="12"`} autocomplete="off"${hint ? ` aria-describedby="${id}-hint"` : ''}>${unit ? `<span class="unit">${unit}</span>` : ''}</div><p class="error" id="${id}-error" role="alert"></p></div>`;
+  const hint = key === 'calories' ? 'Pakette “metabolize edilebilir enerji” veya “ME” satırındaki kcal/kg değerini bul.' : '';
+  return `<div class="field${wide ? ' wide' : ''}"><div class="label-row"><label for="${id}">${label}</label>${hint ? info(label, `<p id="${id}-hint">${t(hint)}</p><p>${t('Örnek: 350 kcal/100 g yazıyorsa 3500 gir.')}</p>`) : ''}</div><div class="input-wrap"><input id="${id}" name="${key}" value="${escapeHtml(cat[key])}" ${key === 'food' ? 'maxlength="200"' : `inputmode="${weight ? 'numeric' : 'decimal'}" maxlength="12"`} autocomplete="off"${hint ? ` aria-describedby="${id}-hint"` : ''}>${unit ? `<span class="unit">${unit}</span>` : ''}</div><p class="error" id="${id}-error" role="alert"></p></div>`;
 }
 function catName(cat, index) { return cat.name.trim() || `${language === 'en' ? 'Cat' : 'Kedi'} ${index + 1}`; }
 function centerActiveTab() {
@@ -136,7 +150,7 @@ function renderTabs() {
   const rail = document.getElementById('cat-tabs');
   const previousScroll = rail.scrollLeft;
   rail.parentElement.classList.toggle('multiple', cats.length > 1);
-  document.getElementById('cat-tabs').innerHTML = cats.map((cat, index) => `<button type="button" role="tab" id="tab-${cat.id}" aria-controls="${cat.id}" aria-selected="${cat.id === activeId}" tabindex="${cat.id === activeId ? 0 : -1}" data-cat="${cat.id}" data-color="${cat.color}" aria-label="${escapeHtml(catName(cat, index))}" title="${escapeHtml(catName(cat, index))}" aria-describedby="cat-actions-hint" aria-keyshortcuts="Delete Shift+F10">${catIcon}${cats.length > 1 ? `<span class="cat-number" aria-hidden="true">${index + 1}</span>` : ''}</button>`).join('');
+  document.getElementById('cat-tabs').innerHTML = cats.map((cat, index) => `<div class="profile-tab" role="presentation"><button type="button" role="tab" id="tab-${cat.id}" aria-controls="${cat.id}" aria-selected="${cat.id === activeId}" tabindex="${cat.id === activeId ? 0 : -1}" data-cat="${cat.id}" data-color="${cat.color}" aria-label="${escapeHtml(catName(cat, index))}" title="${escapeHtml(catName(cat, index))}" aria-describedby="cat-actions-hint" aria-keyshortcuts="Delete Shift+F10">${catIcon(cat)}${cats.length > 1 ? `<span class="cat-number" aria-hidden="true">${index + 1}</span>` : ''}</button><span class="profile-name" aria-hidden="true" title="${escapeHtml(catName(cat, index))}">${escapeHtml(catName(cat, index))}</span></div>`).join('');
   document.getElementById('cat-tabs').setAttribute('aria-label', language === 'en' ? 'Cats' : 'Kediler');
   document.getElementById('add-cat').setAttribute('aria-label', t('Kedi ekle'));
   document.getElementById('add-cat').title = t('Kedi ekle');
@@ -165,11 +179,11 @@ function showError(card, key, message) {
 function render() {
 document.getElementById('cats').innerHTML = cats.map(cat => `<article class="cat" data-color="${cat.color}" id="${cat.id}" role="tabpanel" aria-labelledby="tab-${cat.id}"${cat.id === activeId ? '' : ' hidden'}>
   <div class="cat-head"><div class="field"><label for="${cat.id}-name">Kedi adı</label><div class="input-wrap"><input id="${cat.id}-name" name="name" value="${escapeHtml(cat.name)}" maxlength="60" autocomplete="off"></div></div><div class="field"><label for="${cat.id}-automatic">Besleme yöntemi</label><div class="input-wrap"><select id="${cat.id}-automatic" name="automatic"><option value="true"${cat.automatic ? ' selected' : ''}>Otomat</option><option value="false"${!cat.automatic ? ' selected' : ''}>Elle besleme</option></select></div></div></div>
-  <div class="result" role="status" aria-atomic="true"><span class="result-label">Günlük mama miktarı</span><div class="result-main"><strong data-result="grams">—</strong><span>gram / gün</span></div><div class="result-meta" data-result="meta"></div></div>
+  <div class="result" role="status" aria-atomic="true"><span class="result-label">Tahmini günlük mama miktarı</span><div class="result-main"><strong data-result="grams">—</strong><span>gram / gün</span></div><div class="result-meta" data-result="meta"></div></div>
   <div class="fields"><div class="field-grid">
     ${input(cat, 'weight', 'Mevcut ağırlık (g)', '', true)}
-    <div class="field wide"><div class="label-row"><label for="${cat.id}-factor">RER katsayısı</label>${info('RER katsayısı', `<p>${t('Çarpan, hesaplanan kaloriyi değiştirir: 1× aynı tutar, 0,8× %20 azaltır, 1,2× %20 artırır.')}</p><p data-result="reference"></p>`)}</div><div class="input-wrap"><select id="${cat.id}-factor" name="factor">${factors.map(([value, label]) => `<option value="${value}"${cat.factor === value ? ' selected' : ''}>${label}</option>`).join('')}</select></div></div>
-    <div class="field wide ideal-field">${input(cat, 'ideal', 'Hedef ağırlık (g, isteğe bağlı)', '')}</div>
+    <div class="field wide"><div class="label-row"><label for="${cat.id}-factor">RER katsayısı</label>${info('RER katsayısı', `<p>${t('RER, dinlenirken gereken enerjidir. Katsayıyı kedinin yaşına ve durumuna göre seç.')}</p><p>${t('1× düşük aktivite; 1,2× kısır yetişkin; yavrular için yaş aralığını seç.')}</p><p>${t('0,8× ve 1,8× hedef ağırlığı kullanır; hedef boşsa mevcut ağırlık kullanılır.')}</p><p data-result="reference"></p><p>${t('Bu bir başlangıç tahminidir; miktarı kilo takibi ve veteriner önerisiyle ayarla.')}</p><a href="https://www.merckvetmanual.com/multimedia/table/daily-maintenance-energy-requirements-for-dogs-and-cats" target="_blank" rel="noopener noreferrer">${t('Veteriner kaynağı')}</a>`)}</div><div class="input-wrap"><select id="${cat.id}-factor" name="factor">${factors.map(([value, label]) => `<option value="${value}"${cat.factor === value ? ' selected' : ''}>${label}</option>`).join('')}</select></div></div>
+    <div class="field wide ideal-field">${input(cat, 'ideal', 'Hedef ağırlık (g, isteğe bağlı)', '')}<p class="weight-reference" data-result="weight-reference"></p></div>
     <div class="field wide">${input(cat, 'calories', 'Mamanın enerji değeri', 'kcal / kg')}</div>
   </div>
   <div class="portion-box"${cat.automatic ? '' : ' hidden'}>${input(cat, 'portion', 'Otomat porsiyonu', 'g')}<div class="portion-result"><span class="portion-label">Günlük porsiyon</span><div class="portion-value"><strong data-result="portions">—</strong> porsiyon</div></div><p class="portion-rounding" data-result="rounding"></p></div>
@@ -211,6 +225,7 @@ function update() {
       if (hint) el.setAttribute('aria-describedby', hint.id);
       else el.removeAttribute('aria-describedby');
     });
+    set('weight-reference', t(String(cat.ideal).trim() ? 'Hesaplamada hedef ağırlık kullanılır.' : 'Boş bırakırsan mevcut ağırlık kullanılır.'));
     set('grams', '—'); set('portions', '—'); set('rounding', ''); set('reference', '');
     try {
       // Daily grams remain available even while feeder settings are incomplete.
@@ -250,6 +265,9 @@ document.getElementById('cats').addEventListener('input', event => {
     const tab = document.getElementById(`tab-${cat.id}`);
     tab.setAttribute('aria-label', catName(cat, cats.indexOf(cat)));
     tab.title = catName(cat, cats.indexOf(cat));
+    const label = tab.parentElement.querySelector('.profile-name');
+    label.textContent = tab.title;
+    label.title = tab.title;
   }
   update();
 });
