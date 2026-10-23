@@ -59,6 +59,15 @@ const { chromium } = require('playwright');
    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
    await page.locator('#language').selectOption('en');
    assert.equal(await page.locator('#add-cat').innerText(), '+ Add cat');
+   assert.equal(await page.getByRole('button', { name: 'Light', exact: true }).locator('svg').count(), 1);
+   assert.equal(await page.getByRole('button', { name: 'Dark', exact: true }).locator('svg').count(), 1);
+   for (const selector of ['.language-control', '[data-theme-choice=light]', '[data-theme-choice=dark]']) {
+    const box = await page.locator(selector).boundingBox();
+    assert.ok(box.width >= 44 && box.height >= 44);
+   }
+   const toolbar = await page.locator('.toolbar').boundingBox();
+   const dark = await page.locator('[data-theme-choice=dark]').boundingBox();
+   assert.ok(Math.abs(toolbar.x + toolbar.width - dark.x - dark.width) < 1);
    await page.locator('#tab-cat1').click();
    await page.locator('#cat1 summary').click();
    assert.ok((await page.locator('#cat1 .calculation-help').innerText()).includes('For cats only'));
@@ -84,7 +93,38 @@ const { chromium } = require('playwright');
   await clean.reload();
   assert.equal(await clean.locator('#cat1-weight').inputValue(), '3280');
   assert.equal(await clean.locator('#cat2-weight').inputValue(), '5000');
+  // Cancel preserves data; deleting a middle cat and adding another keeps IDs unique.
+  await clean.locator('#add-cat').click();
+  await clean.locator('#cat3-name').fill('Third');
+  await clean.locator('#tab-cat2').click();
+  clean.once('dialog', dialog => dialog.dismiss());
+  await clean.locator('#cat2 .delete-cat').click();
+  assert.equal(await clean.locator('[role=tab]').count(), 3);
+  clean.once('dialog', dialog => dialog.accept());
+  await clean.locator('#cat2 .delete-cat').click();
+  assert.equal(await clean.locator('[role=tab]').count(), 2);
+  assert.ok(await clean.locator('#tab-cat3').evaluate(el => el === document.activeElement));
+  await clean.locator('#add-cat').click();
+  assert.equal(await clean.locator('#cat4-name').inputValue(), '');
+  assert.equal(await clean.locator('#cat3-name').inputValue(), 'Third');
+  assert.equal(await clean.locator('[id=cat3]').count(), 1);
+  await clean.reload();
+  assert.equal(await clean.locator('[role=tab]').count(), 3);
+  assert.equal(await clean.locator('#cat2-name').inputValue(), 'Third');
+  assert.equal(await clean.locator('#cat1-weight').inputValue(), '3280');
+  await clean.locator('#language').selectOption('en');
+  assert.equal(await clean.locator('#cat1 .delete-cat').innerText(), 'Delete cat');
+  clean.on('dialog', dialog => dialog.accept());
+  while (await clean.locator('[role=tab]').count()) {
+   await clean.locator('.cat:not([hidden]) .delete-cat').click();
+  }
+  assert.ok(await clean.locator('#add-cat').evaluate(el => el === document.activeElement));
+  await clean.reload();
+  assert.equal(await clean.locator('[role=tab]').count(), 0);
+  await clean.locator('#add-cat').click();
+  assert.equal(await clean.locator('[role=tab]').count(), 1);
+  assert.equal(await clean.locator('.cat input[name=name]').inputValue(), '');
   await fresh.close();
-  console.log('UI checks passed: responsive themes, tabs, 8 cats, persistence, optional target, inline errors and feeder grams.');
+  console.log('UI checks passed: responsive icon controls, cat deletion/cancellation, unique IDs, empty-state persistence, calculation and validation.');
  } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

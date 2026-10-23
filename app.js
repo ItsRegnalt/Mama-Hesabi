@@ -34,7 +34,7 @@ document.querySelector('.theme-controls').addEventListener('click', event => {
 });
 const newCat = id => ({ id, name: '', weight: '', ideal: '', factor: '1', food: '', calories: '', automatic: false, portion: '' });
 const storedCats = Array.isArray(saved.cats) ? saved.cats.filter(cat => cat && typeof cat === 'object') : [];
-let cats = (storedCats.length ? storedCats : [newCat('cat1'), newCat('cat2')]).map((stored, index) => {
+let cats = (Array.isArray(saved.cats) ? storedCats : [newCat('cat1'), newCat('cat2')]).map((stored, index) => {
   const cat = newCat(`cat${index + 1}`);
   for (const key of Object.keys(cat)) {
     if (key === 'id') continue;
@@ -44,9 +44,10 @@ let cats = (storedCats.length ? storedCats : [newCat('cat1'), newCat('cat2')]).m
   if (!['0.8', '1', '1.2', '1.4', '1.8', '2', '2.5'].includes(cat.factor)) cat.factor = '1';
   return cat;
 });
-let activeId = cats[0].id;
+let activeId = cats[0]?.id || null;
+let nextCatId = cats.length + 1;
 const translations = {
-'Kedi ekle':'Add cat','Hesaplama ayrıntısı':'Calculation details',
+'Kedi ekle':'Add cat','Kediyi sil':'Delete cat','Bu kediyi ve kayıtlı bilgilerini silmek istiyor musun?':'Delete this cat and its saved information?','Hesaplama ayrıntısı':'Calculation details',
 'Yalnızca kediler için. RER, dinlenme enerji ihtiyacıdır. Günlük enerji = RER × seçilen çarpan.':'For cats only. RER is resting energy requirement. Daily energy = RER × selected multiplier.',
 'Tam gram gir; nokta veya virgül kullanma. Örn. 3280.':'Enter whole grams without dots or commas, e.g. 3280.',
 'Ağırlığı tam gram olarak gir. Örn. 3280.':'Enter weight in whole grams, e.g. 3280.',
@@ -67,7 +68,7 @@ function translatePage() {
   document.getElementById('language').value = language;
   document.querySelector('.theme-controls').setAttribute('aria-label', language === 'en' ? 'Appearance' : 'Görünüm');
   document.getElementById('cats').setAttribute('aria-label', language === 'en' ? 'Cat feeding settings' : 'Kedi beslenme ayarları');
-  document.querySelectorAll('[data-theme-choice]').forEach(button => { button.textContent = t(button.dataset.themeChoice === 'light' ? 'Açık' : 'Koyu'); });
+  document.querySelectorAll('[data-theme-choice]').forEach(button => { const label = t(button.dataset.themeChoice === 'light' ? 'Açık' : 'Koyu'); button.setAttribute('aria-label', label); button.title = label; });
   const walker = document.createTreeWalker(document.getElementById('cats'), NodeFilter.SHOW_TEXT);
   while (walker.nextNode()) {
     const node = walker.currentNode, text = node.textContent.trim();
@@ -114,6 +115,7 @@ document.getElementById('cats').innerHTML = cats.map(cat => `<article class="cat
   </div>
   <div class="portion-box"${cat.automatic ? '' : ' hidden'}>${input(cat, 'portion', 'Otomat porsiyonu', 'g')}<div class="portion-result"><span class="portion-label">Günlük porsiyon</span><div class="portion-value"><strong data-result="portions">—</strong> porsiyon</div></div><p class="portion-rounding" data-result="rounding"></p></div>
   </div>
+  <button type="button" class="delete-cat">Kediyi sil</button>
 </article>`).join('');
 translatePage();
 renderTabs();
@@ -176,6 +178,17 @@ document.getElementById('cats').addEventListener('input', event => {
   }
   update();
 });
+document.getElementById('cats').addEventListener('click', event => {
+  if (!event.target.closest('.delete-cat')) return;
+  if (!window.confirm(t('Bu kediyi ve kayıtlı bilgilerini silmek istiyor musun?'))) return;
+  const id = event.target.closest('.cat').id;
+  const index = cats.findIndex(cat => cat.id === id);
+  cats.splice(index, 1);
+  activeId = cats[Math.min(index, cats.length - 1)]?.id || null;
+  render(); saveSettings();
+  (document.getElementById(`tab-${activeId}`) || document.getElementById('add-cat')).focus();
+});
+
 document.getElementById('cat-tabs').addEventListener('click', event => {
   const tab = event.target.closest('[data-cat]');
   if (tab) { activateCat(tab.dataset.cat); document.getElementById(`tab-${activeId}`).focus(); }
@@ -189,7 +202,7 @@ document.getElementById('cat-tabs').addEventListener('keydown', event => {
   document.getElementById(`tab-${activeId}`).focus();
 });
 document.getElementById('add-cat').addEventListener('click', () => {
-  const cat = newCat(`cat${cats.length + 1}`);
+  const cat = newCat(`cat${nextCatId++}`);
   cats.push(cat); activeId = cat.id;
   render(); saveSettings();
   document.getElementById(`${cat.id}-name`).focus();

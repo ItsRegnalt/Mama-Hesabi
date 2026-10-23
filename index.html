@@ -16,7 +16,16 @@
 </head>
 <body>
   <main>
-    <div class="toolbar"><label class="language-control" for="language"><span>Dil / Language</span><select id="language"><option value="tr">Türkçe</option><option value="en">English</option></select></label><div class="theme-controls" role="group" aria-label="Görünüm"><button type="button" data-theme-choice="light" aria-pressed="false">Açık</button><button type="button" data-theme-choice="dark" aria-pressed="false">Koyu</button></div></div>
+    <div class="toolbar">
+      <label class="language-control" for="language" title="Dil / Language">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a18 18 0 0 1 0 18 18 18 0 0 1 0-18Z"/></svg>
+        <select id="language" aria-label="Dil / Language"><option value="tr">Türkçe</option><option value="en">English</option></select>
+      </label>
+      <div class="theme-controls" role="group" aria-label="Görünüm">
+        <button type="button" data-theme-choice="light" aria-label="Açık" title="Açık" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></button>
+        <button type="button" data-theme-choice="dark" aria-label="Koyu" title="Koyu" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 13.2A9 9 0 0 1 10.8 3.5a9 9 0 1 0 9.7 9.7Z"/></svg></button>
+      </div>
+    </div>
     <div class="cat-navigation"><div id="cat-tabs" role="tablist" aria-label="Kediler"></div><button type="button" id="add-cat">+ Kedi ekle</button></div>
     <section class="cats" id="cats" aria-label="Kedilerin beslenme ayarları"></section>
     <p id="save-status" class="hint save-status" role="status"></p>
