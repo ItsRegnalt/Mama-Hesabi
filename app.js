@@ -122,19 +122,19 @@ const format = (value, digits = 1) => value.toLocaleString(language === 'en' ? '
 const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 const factors = [['0.8', '0,8× · Kilo verme'], ['1', '1× · Kiloyu koruma'], ['1.2', '1,2× · Kısır yetişkin'], ['1.4', '1,4× · Kısır olmayan yetişkin'], ['1.8', '1,8× · Kilo alma'], ['2', '2× · Yavru, 4–12 ay'], ['2.5', '2,5× · Yavru, 0–4 ay']];
 const infoIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></svg>';
-// Opaque faces and transparent surrounds keep the reference artwork clear in both themes.
+// Mask the original artwork so its baked checkerboard never appears in either theme.
 const catPortraits = [
-  ['#c4d4f1', 'M4 8Q10 2 18 16Q32 10 46 16Q55 3 59 8L57 30Q62 57 32 59Q2 57 7 30Z', 'M0 0H64V31Q56 49 45 35L32 26 20 39Q8 45 0 30Z', 'M22 14l2 8m8-10v11m9-9-2 8'],
-  ['#c0dccd', 'M7 29Q3 15 7 6Q12 3 23 17Q32 14 42 17Q54 3 57 6Q62 12 57 29Q64 57 32 59Q0 57 7 29Z', 'M0 0H26Q34 23 25 37Q18 46 0 46Z', ''],
-  ['#edb6b7', 'M7 29 6 5Q9 1 24 18Q32 15 41 18L56 4Q60 1 57 29Q64 58 32 59Q0 58 7 29Z', 'M7 6 19 20 8 25ZM56 6 45 20 57 25Z', 'M25 19l1 7m6-8v11m7-10-1 7M6 36l9 2m-9 7 9-2m34-5 9-2m-9 7 9 2'],
-  ['#f6dd87', 'M7 29 5 5Q8 1 24 19Q34 16 43 20L57 4Q61 1 58 30Q64 58 32 59Q0 58 7 29Z', 'M38 0H64V49Q40 49 34 32Z', ''],
-  ['#c7abd9', 'M7 25Q2 24 4 18Q9 9 18 15Q32 11 46 15Q55 9 60 18Q63 24 57 25Q66 57 32 59Q-2 57 7 25Z', 'M0 0H64V22L53 27 48 17 40 17 38 26 33 17 30 27 25 17 17 17 12 27 0 24Z', 'M5 38l10 3m-10 7 10-3m34-4 10-3m-10 7 10 3'],
-  ['#f5b698', 'M7 29 6 5Q9 1 24 18Q32 15 41 18L56 4Q60 1 57 29Q64 58 32 59Q0 58 7 29Z', 'M8 7 19 21 8 26ZM42 0H64V43Q40 49 35 32ZM10 30Q24 24 26 36Q27 49 14 49Q3 47 10 30Z', '']
+  [1335, 150, 445, 'M1362 193Q1380 158 1412 181L1480 220Q1556 189 1625 222L1689 183Q1739 157 1750 214Q1759 270 1735 319Q1785 399 1738 474Q1684 556 1557 559Q1426 558 1374 479Q1328 408 1369 328Q1343 250 1362 193Z'],
+  [140, 150, 425, 'M175 181Q179 154 207 171Q240 190 280 234Q347 208 422 235L486 177Q519 148 530 182Q541 224 523 316Q565 404 532 471Q489 553 360 557Q230 561 182 492Q141 437 161 370L181 316Q162 224 175 181Z'],
+  [745, 145, 430, 'M775 185Q782 143 812 163Q850 190 902 244Q954 228 1011 244L1081 176Q1119 140 1134 178Q1149 222 1130 337Q1170 411 1133 476Q1083 559 959 561Q831 558 784 487Q744 425 774 349Q761 241 775 185Z'],
+  [1335, 725, 450, 'M1353 761Q1363 732 1387 742L1483 824Q1556 809 1628 829L1728 749Q1764 719 1772 755Q1781 803 1744 923Q1776 1028 1714 1092Q1656 1147 1556 1150Q1447 1148 1397 1098Q1354 1057 1356 1003Q1354 961 1372 940Q1339 852 1353 761Z'],
+  [130, 755, 440, 'M148 837Q169 797 206 792Q232 779 266 806Q346 776 426 805Q455 772 480 790Q515 797 544 833Q555 851 542 867L528 879Q571 957 549 1029Q520 1134 351 1140Q191 1140 154 1048Q125 975 162 881Q136 868 148 837Z'],
+  [745, 730, 430, 'M766 773Q780 730 809 747Q851 777 902 827Q951 812 1007 828L1090 753Q1124 723 1138 766Q1152 811 1133 921Q1175 1004 1134 1069Q1081 1144 958 1147Q825 1145 782 1077Q741 1010 768 934Q754 823 766 773Z']
 ];
 function catIcon(cat) {
-  const [color, head, patch, stripes] = catPortraits[palette.indexOf(cat.color)];
+  const [x, y, size, outline] = catPortraits[palette.indexOf(cat.color)];
   const clip = `portrait-${cat.id}`;
-  return `<svg viewBox="0 0 64 64" fill="none" stroke="#101d49" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><clipPath id="${clip}"><path d="${head}"/></clipPath></defs><path class="cat-face" d="${head}" fill="#faf7ef" stroke="none"/><g clip-path="url(#${clip})"><path class="cat-marking" d="${patch}" fill="${color}" stroke="none"/><path d="${stripes}" stroke="${color}" stroke-width="3.5"/></g><path d="${head}"/><g fill="#101d49" stroke="none"><ellipse cx="21" cy="35" rx="2.5" ry="3.5"/><ellipse cx="43" cy="35" rx="2.5" ry="3.5"/><path d="M28 42Q32 40 36 42Q36 44 32 47Q28 44 28 42Z"/></g><path d="M32 46v3m-8-1q2 7 8 1 6 6 8-1"/></svg>`;
+  return `<svg viewBox="${x} ${y} ${size} ${size}" aria-hidden="true"><defs><clipPath id="${clip}"><path d="${outline}" transform="translate(${x + size / 2} ${y + size / 2}) scale(0.96) translate(${-x - size / 2} ${-y - size / 2})"/></clipPath></defs><image href="cat-portraits.jpg" width="1907" height="1280" preserveAspectRatio="none" clip-path="url(#${clip})"/></svg>`;
 }
 function info(label, content) {
   return `<details class="field-info"><summary aria-label="${escapeHtml(t(label))} — ${t('Bilgi')}">${infoIcon}</summary><div class="info-content">${content}</div></details>`;

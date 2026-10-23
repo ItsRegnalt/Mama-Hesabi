@@ -72,7 +72,7 @@ const { chromium } = require('playwright');
    }
    assert.equal(await page.getByRole('tab').count(), 8);
    assert.equal(await page.locator('#tab-cat2').innerText(), '2');
-   assert.equal(new Set(await page.locator('.cat-marking').evaluateAll(paths => paths.slice(0, 6).map(path => path.getAttribute('d')))).size, 6);
+   assert.equal(new Set(await page.locator('#cat-tabs clipPath path').evaluateAll(paths => paths.slice(0, 6).map(path => path.getAttribute('d')))).size, 6);
    assert.equal(new Set(await page.getByRole('tab').evaluateAll(tabs => tabs.slice(0, 6).map(tab => tab.dataset.color))).size, 6);
    for (const theme of ['light', 'dark']) {
     if (await page.locator('html').getAttribute('data-theme') !== theme) await page.locator('#theme-toggle').click();
@@ -82,9 +82,9 @@ const { chromium } = require('playwright');
      const resultColor = await page.locator(`#cat${i} .result`).evaluate(el => getComputedStyle(el).color);
      assert.equal(tabColor, resultColor);
      const icon = page.locator(`#tab-cat${i} svg`);
-     assert.equal(await icon.locator('.cat-face').evaluate(el => getComputedStyle(el).fill), 'rgb(250, 247, 239)');
-     assert.equal(await icon.getAttribute('viewBox'), '0 0 64 64');
-     assert.equal(await icon.evaluate(el => getComputedStyle(el).stroke), 'rgb(16, 29, 73)');
+     assert.equal(await icon.locator('image').getAttribute('href'), 'cat-portraits.jpg');
+     assert.equal(await icon.locator('image').evaluate(el => el.getAttribute('clip-path')), `url(#portrait-cat${i})`);
+     assert.equal(await icon.locator('clipPath path').count(), 1);
      assert.equal(await icon.evaluate(el => getComputedStyle(el).color), ['rgb(49, 93, 139)', 'rgb(57, 102, 71)', 'rgb(139, 69, 93)', 'rgb(121, 91, 45)', 'rgb(102, 81, 138)', 'rgb(48, 104, 101)'][(i - 1) % 6]);
     }
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
