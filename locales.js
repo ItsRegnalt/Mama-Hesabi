@@ -1,5 +1,8 @@
 window.PatiLocales = {
   "en": {
+    "Garfield": "Garfield",
+    "Çizmeli Kedi": "Puss in Boots",
+    "Sfenks": "Sphynx",
     "1× · Düşük aktivite": "1× · Low activity",
     "2,5× · Büyüme dönemi": "2.5× · Growth",
     "Önceki seçim — yeniden seçin": "Previous selection — choose again",
@@ -85,6 +88,8 @@ window.PatiLocales = {
     "Kedilerin beslenme ayarları": "Cats’ feeding settings",
     "Kedi görünümü": "Cat appearance",
     "Tamam": "Done",
+    "Kapat": "Close",
+    "Bitti": "Done",
     "Kediler": "Cats",
     "Kedi": "Cat",
     "Hesapta kullanılan ağırlık": "Weight used",
@@ -105,6 +110,9 @@ window.PatiLocales = {
     "Sarman Beyaz": "Ginger & White"
   },
   "de": {
+    "Garfield": "Garfield",
+    "Çizmeli Kedi": "Der Gestiefelte Kater",
+    "Sfenks": "Sphynx",
     "1× · Düşük aktivite": "1× · Geringe Aktivität",
     "2,5× · Büyüme dönemi": "2,5× · Wachstum",
     "Önceki seçim — yeniden seçin": "Vorherige Auswahl — bitte erneut wählen",
@@ -190,6 +198,8 @@ window.PatiLocales = {
     "Kedilerin beslenme ayarları": "Fütterungseinstellungen der Katzen",
     "Kedi görünümü": "Aussehen der Katze",
     "Tamam": "Fertig",
+    "Kapat": "Schließen",
+    "Bitti": "Fertig",
     "Kediler": "Katzen",
     "Kedi": "Katze",
     "Hesapta kullanılan ağırlık": "Für die Berechnung verwendetes Gewicht",
@@ -210,6 +220,9 @@ window.PatiLocales = {
     "Sarman Beyaz": "Rot-weiß"
   },
   "es": {
+    "Garfield": "Garfield",
+    "Çizmeli Kedi": "El Gato con Botas",
+    "Sfenks": "Sphynx",
     "1× · Düşük aktivite": "1× · Actividad baja",
     "2,5× · Büyüme dönemi": "2,5× · Crecimiento",
     "Önceki seçim — yeniden seçin": "Selección anterior — vuelve a elegir",
@@ -295,6 +308,8 @@ window.PatiLocales = {
     "Kedilerin beslenme ayarları": "Ajustes de alimentación de los gatos",
     "Kedi görünümü": "Aspecto del gato",
     "Tamam": "Listo",
+    "Kapat": "Cerrar",
+    "Bitti": "Listo",
     "Kediler": "Gatos",
     "Kedi": "Gato",
     "Hesapta kullanılan ağırlık": "Peso usado en el cálculo",

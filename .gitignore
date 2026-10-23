@@ -4,3 +4,5 @@ node_modules/
 *.log
 *.zip
 preview-*.png
+CURRENT_STATE.md
+Gemini_Generated_Image_*.jpg

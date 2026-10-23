@@ -15,6 +15,7 @@ const server = http.createServer((req, res) => {
 });
 files['/manifest.webmanifest'] = ['manifest.webmanifest', 'application/manifest+json'];
 for (const name of ['favicon.png', 'icon-192.png', 'icon-512.png']) files[`/${name}`] = [name, 'image/png'];
+files['/cat-special.png'] = ['cat-special.png', 'image/png'];
 files['/cat-portraits.png'] = ['cat-portraits.png', 'image/png'];
 files['/apple-touch-icon.png'] = ['apple-touch-icon.png', 'image/png'];
 for (const weight of [400, 600, 700]) files[`/nunito-${weight}.ttf`] = [`nunito-${weight}.ttf`, 'font/ttf'];

@@ -205,7 +205,8 @@ footer { margin-top: 16px; text-align: left; color: var(--muted); font-size: 12p
 .weight-reference { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .info-content a { color: inherit; text-underline-offset: 3px; }
 
-#appearance-dialog { width: min(420px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; }
+body.appearance-open { position: fixed; top: var(--page-scroll-offset); width: 100%; overflow: hidden; }
+#appearance-dialog { overscroll-behavior: contain; touch-action: pan-y; width: min(420px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; }
 #appearance-title { margin: 0 0 20px; font-size: 18px; font-weight: 600; text-align: center; }
 #appearance-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 20px; }
 #appearance-options button { display: grid; justify-items: center; gap: 6px; min-height: 86px; padding: 8px 4px; font: inherit; font-size: 12px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 12px; cursor: pointer; }
@@ -269,4 +270,9 @@ footer { margin-top: 16px; text-align: left; color: var(--muted); font-size: 12p
 #install-help:not([open]) > #install-instructions { display: none; }
 @media (prefers-reduced-motion: no-preference) {
   #install-help[open] > #install-instructions { animation: surface-in 200ms var(--ease-out); }
+}
+
+.keyboard-done { display: none; flex-shrink: 0; min-width: 54px; min-height: 44px; margin-right: 2px; padding: 0 8px; border: 0; border-left: 1px solid var(--line); background: transparent; color: var(--ink); font: inherit; font-size: 13px; cursor: pointer; }
+@media (any-pointer: coarse) {
+  .input-wrap:focus-within .keyboard-done { display: block; }
 }

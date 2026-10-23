@@ -10,7 +10,7 @@ const t = text => window.PatiLocales[language]?.[text] || text;
 let themeChoice = ['light', 'dark'].includes(saved.theme) ? saved.theme : null;
 function saveSettings() {
   try {
-    localStorage.setItem(storageKey, JSON.stringify({ cats, theme: themeChoice, language }));
+    localStorage.setItem(storageKey, JSON.stringify({ cats, activeId, theme: themeChoice, language }));
     document.getElementById('save-status').textContent = t('Girdiğiniz bilgiler cihazınızda saklanır.');
   } catch {
     document.getElementById('save-status').textContent = t('Bu tarayıcıda kayıt yapılamadı.');
@@ -58,7 +58,8 @@ const palette = ['blue', 'green', 'rose', 'amber', 'purple', 'teal'];
 const catTypes = [
   ['tabby','Tekir','Brown Tabby'], ['ginger','Sarman','Ginger'], ['tuxedo','Smokin','Tuxedo'], ['calico','Üç Renkli','Calico'],
   ['gray','Gri','Gray'], ['white','Beyaz','White'], ['siamese','Siyam','Siamese'], ['black','Siyah','Black'],
-  ['silver','Gümüş Tekir','Silver Tabby'], ['tortie','Bağa','Tortoiseshell'], ['ragdoll','Ragdoll','Ragdoll'], ['bicolor','Sarman Beyaz','Ginger & White']
+  ['silver','Gümüş Tekir','Silver Tabby'], ['tortie','Bağa','Tortoiseshell'], ['ragdoll','Ragdoll','Ragdoll'], ['bicolor','Sarman Beyaz','Ginger & White'],
+  ['garfield','Garfield','Garfield'], ['puss','Çizmeli Kedi','Puss in Boots'], ['sphynx','Sfenks','Sphynx']
 ];
 const newCat = (id, color = 'blue', appearance = 'tabby') => ({ id, color, appearance, name: '', weight: '', ideal: '', factor: '1', food: '', calories: '', automatic: false, portion: '' });
 const storedCats = Array.isArray(saved.cats) ? saved.cats.filter(cat => cat && typeof cat === 'object') : [];
@@ -77,7 +78,8 @@ let cats = (Array.isArray(saved.cats) ? storedCats : [newCat('cat1')]).map((stor
 if (!cats.length) cats.push(newCat('cat1'));
 const defaultCatId = cats[0].id;
 const canRemove = id => id === activeId && id !== defaultCatId && cats.some(cat => cat.id === id);
-let activeId = cats[0]?.id || null;
+// Stored IDs can have gaps after removal; loading renumbers profiles.
+let activeId = cats[storedCats.findIndex(cat => cat.id === saved.activeId)]?.id || cats[0].id;
 let nextCatId = cats.length + 1;
 function translatePage() {
   document.documentElement.lang = language;
@@ -112,6 +114,10 @@ const factors = [['0.8', '0,8× · Kilo verme'], ['1', '1× · Düşük aktivite
 const infoIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></svg>';
 function catIcon(cat) {
   const index = Math.max(0, catTypes.findIndex(type => type[0] === cat.appearance));
+  if (index >= 12) {
+    const origins = [[70, 35], [786, 25], [1438, 35]];
+    return `<svg class="cat-portrait" viewBox="${origins[index - 12].join(' ')} 660 660" aria-hidden="true"><image href="cat-special.png?v=1" width="2172" height="724"/></svg>`;
+  }
   // The generated sheet is not a uniform grid; center each portrait on its visible bounds.
   const origins = [[6,146],[315,146],[618,146],[926,145],[5,473],[312,474],[619,473],[926,474],[6,796],[313,796],[619,797],[927,797]];
   return `<svg class="cat-portrait" viewBox="${origins[index].join(' ')} 320 320" aria-hidden="true"><image href="cat-portraits.png?v=3" width="1254" height="1254"/></svg>`;
@@ -124,7 +130,7 @@ function input(cat, key, label, unit, wide = false) {
   const id = `${cat.id}-${key}`;
   const weight = key === 'weight' || key === 'ideal';
   const hint = key === 'calories' ? 'Pakette “metabolize edilebilir enerji” veya “ME” satırındaki kcal/kg değerini bul.' : '';
-  return `<div class="field${wide ? ' wide' : ''}"><div class="label-row"><label for="${id}">${label}</label>${hint ? info(label, `<p id="${id}-hint">${t(hint)}</p><p>${t('Örnek: 350 kcal/100 g yazıyorsa 3500 gir.')}</p>`) : ''}</div><div class="input-wrap"><input id="${id}" name="${key}" value="${escapeHtml(cat[key])}" ${key === 'food' ? 'maxlength="200"' : `inputmode="${weight ? 'numeric' : 'decimal'}" maxlength="12"`} autocomplete="off"${hint ? ` aria-describedby="${id}-hint"` : ''}>${unit ? `<span class="unit">${unit}</span>` : ''}</div><p class="error" id="${id}-error" role="alert"></p></div>`;
+  return `<div class="field${wide ? ' wide' : ''}"><div class="label-row"><label for="${id}">${label}</label>${hint ? info(label, `<p id="${id}-hint">${t(hint)}</p><p>${t('Örnek: 350 kcal/100 g yazıyorsa 3500 gir.')}</p>`) : ''}</div><div class="input-wrap"><input id="${id}" name="${key}" value="${escapeHtml(cat[key])}" ${key === 'food' ? 'maxlength="200"' : `inputmode="${weight ? 'numeric' : 'decimal'}" enterkeyhint="done" maxlength="12"`} autocomplete="off"${hint ? ` aria-describedby="${id}-hint"` : ''}>${unit ? `<span class="unit">${unit}</span>` : ''}${key !== 'food' ? `<button type="button" class="keyboard-done">${t('Bitti')}</button>` : ''}</div><p class="error" id="${id}-error" role="alert"></p></div>`;
 }
 function catName(cat, index) { return cat.name.trim() || `${t('Kedi')} ${index + 1}`; }
 function updateRailEdges() {
@@ -140,7 +146,7 @@ let railPointerDown = false;
 function settleRail() {
   clearTimeout(railSettleTimer);
   railSettleTimer = setTimeout(() => {
-    if (railPointerDown) return;
+    if (railPointerDown || document.getElementById('appearance-dialog').open) return;
     const rail = document.getElementById('cat-tabs');
     const bounds = rail.parentElement.getBoundingClientRect();
     const center = bounds.left + bounds.width / 2;
@@ -158,19 +164,20 @@ for (const type of ['pointerup', 'pointercancel']) window.addEventListener(type,
   railPointerDown = false; settleRail();
 });
 new ResizeObserver(updateRailEdges).observe(document.getElementById('cat-tabs'));
-function centerActiveTab() {
+function centerActiveTab(instant = false) {
   clearTimeout(railSettleTimer);
   const rail = document.getElementById('cat-tabs');
   const tab = document.getElementById(`tab-${activeId}`);
   if (!tab) return;
   const railBounds = rail.getBoundingClientRect();
   const tabBounds = tab.getBoundingClientRect();
-  rail.scrollTo({ left: rail.scrollLeft + tabBounds.left - railBounds.left + tabBounds.width / 2 - rail.parentElement.clientWidth / 2, behavior: reducedMotion.matches ? 'instant' : 'smooth' });
+  rail.scrollTo({ left: rail.scrollLeft + tabBounds.left - railBounds.left + tabBounds.width / 2 - rail.parentElement.clientWidth / 2, behavior: instant || reducedMotion.matches ? 'instant' : 'smooth' });
   updateRailEdges();
 }
 function renderTabs() {
   const rail = document.getElementById('cat-tabs');
   const previousScroll = rail.scrollLeft;
+  const firstRender = !rail.childElementCount;
   rail.parentElement.classList.toggle('multiple', cats.length > 0);
   document.getElementById('cat-tabs').innerHTML = cats.map((cat, index) => `<div class="profile-tab outside-rail" role="presentation"><button type="button" role="tab" id="tab-${cat.id}" aria-controls="${cat.id}" aria-selected="${cat.id === activeId}" tabindex="${cat.id === activeId ? 0 : -1}" data-cat="${cat.id}" data-color="${cat.color}" aria-label="${escapeHtml(catName(cat, index))}" title="${escapeHtml(catName(cat, index))}" aria-describedby="cat-actions-hint" aria-keyshortcuts="Delete Shift+F10">${catIcon(cat)}${customizeIcon}</button><span class="profile-name" aria-hidden="true" title="${escapeHtml(catName(cat, index))}">${escapeHtml(catName(cat, index))}</span></div>`).join('');
   document.getElementById('cat-tabs').setAttribute('aria-label', t('Kediler'));
@@ -178,10 +185,11 @@ function renderTabs() {
   document.getElementById('add-cat').title = t('Kedi ekle');
   document.getElementById('remove-cat').hidden = !canRemove(activeId);
   rail.scrollLeft = previousScroll;
-  centerActiveTab();
+  centerActiveTab(firstRender);
 }
 function activateCat(id) {
   activeId = id;
+  saveSettings();
   document.querySelectorAll('#cat-tabs [data-cat]').forEach(tab => {
     const selected = tab.dataset.cat === activeId;
     tab.setAttribute('aria-selected', selected);
@@ -279,10 +287,17 @@ function update() {
 }
 
 document.getElementById('cats').addEventListener('keydown', event => {
-  if (event.key !== 'Enter' || event.isComposing || !event.target.matches('input[name="name"]')) return;
+  if (event.key !== 'Enter' || event.isComposing || !event.target.matches('input')) return;
   event.preventDefault();
   event.target.blur();
 });
+document.getElementById('cats').addEventListener('click', event => {
+  const done = event.target.closest('.keyboard-done');
+  if (!done) return;
+  done.parentElement.querySelector('input').blur();
+  done.blur();
+});
+
 document.getElementById('cats').addEventListener('input', event => {
   if (!event.target.name) return;
   const cat = cats.find(cat => cat.id === event.target.closest('.cat').id);
@@ -313,16 +328,26 @@ function requestRemoval(id) {
   haptic(20);
 }
 const appearanceDialog = document.getElementById('appearance-dialog');
+let appearanceScrollY = 0;
+appearanceDialog.addEventListener('close', () => {
+  if (appearanceDialog.open || !document.body.classList.contains('appearance-open')) return;
+  document.body.classList.remove('appearance-open');
+  document.body.style.removeProperty('--page-scroll-offset');
+  window.scrollTo({ top: appearanceScrollY, behavior: 'instant' });
+});
 function openAppearance() {
   const cat = cats.find(cat => cat.id === activeId);
   if (!cat || appearanceDialog.open) return;
   document.getElementById('appearance-title').textContent = t('Kedi görünümü');
-  document.getElementById('appearance-close').textContent = t('Tamam');
+  document.getElementById('appearance-close').textContent = t('Kapat');
   appearanceDialog.dataset.color = cat.color;
   const options = types => types.map(type => `<button type="button" data-appearance="${type[0]}" aria-pressed="${cat.appearance === type[0]}">${catIcon({appearance:type[0]})}<span>${escapeHtml(t(type[1]))}</span></button>`).join('');
   document.getElementById('appearance-options').innerHTML = options(catTypes);
+  appearanceScrollY = window.scrollY;
+  document.body.style.setProperty('--page-scroll-offset', `${-appearanceScrollY}px`);
+  document.body.classList.add('appearance-open');
   appearanceDialog.showModal();
-  appearanceDialog.querySelector('[aria-pressed="true"]').focus();
+  appearanceDialog.querySelector('[aria-pressed="true"]').focus({ preventScroll: true });
 }
 document.getElementById('appearance-options').addEventListener('click', async event => {
   const option = event.target.closest('[data-appearance]');

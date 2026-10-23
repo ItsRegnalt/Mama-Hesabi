@@ -79,7 +79,7 @@ const { chromium } = require('playwright');
    assert.equal(await page.locator('#tab-cat1 + .profile-name').innerText(), 'Örnek <kedi>');
    assert.equal(await page.locator('#tab-cat1 + .profile-name kedi').count(), 0);
    await page.locator('#tab-cat1').click();
-   assert.equal(await page.locator('#appearance-options button').count(), 12);
+   assert.equal(await page.locator('#appearance-options button').count(), 15);
    await page.locator('[data-appearance=black]').click();
    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('mama-payi-v3')).cats[0].appearance), 'black');
    assert.equal(await page.locator('#tab-cat1 .cat-portrait').getAttribute('viewBox'), '926 474 320 320');
@@ -190,6 +190,18 @@ const { chromium } = require('playwright');
   assert.equal(await page.locator('#cat4-name').inputValue(), '');
   await page.reload();
   assert.equal(await page.locator('#cat2').getAttribute('data-color'), thirdColor);
+  assert.equal(await page.locator('#tab-cat3').getAttribute('aria-selected'), 'true', 'New profile survives refresh despite removed IDs');
+  await page.locator('#tab-cat2').click();
+  await page.reload();
+  assert.equal(await page.locator('#tab-cat2').getAttribute('aria-selected'), 'true', 'Selected profile survives refresh');
+  assert.equal(await page.locator('#cat2-name').inputValue(), 'Third');
+  for (const appearance of ['garfield', 'puss', 'sphynx']) {
+   await page.locator('#tab-cat2').click();
+   await page.locator(`[data-appearance=${appearance}]`).click();
+   await page.reload();
+   assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('mama-payi-v3')).cats[1].appearance), appearance);
+   assert.equal(await page.locator('#tab-cat2 image').getAttribute('href'), 'cat-special.png?v=1');
+  }
   while (await page.getByRole('tab').count() > 1) {
    const before = await page.getByRole('tab').count();
    if (await page.getByRole('tab').last().getAttribute('aria-selected') !== 'true') await page.getByRole('tab').last().click();
@@ -208,6 +220,16 @@ const { chromium } = require('playwright');
   const touchPage = await touchContext.newPage();
   const motionErrors = []; touchPage.on('pageerror', error => motionErrors.push(error.message));
   await touchPage.goto('http://localhost:4783');
+  for (const [field, value] of [['weight', '3280'], ['calories', '3352']]) {
+   const input = touchPage.locator(`#cat1-${field}`);
+   await input.fill(value);
+   const done = input.locator('..').locator('.keyboard-done');
+   assert.ok(await done.isVisible(), 'Touch number input offers Done');
+   await done.tap();
+   assert.equal(await input.evaluate(el => el === document.activeElement), false);
+   assert.ok(await done.isHidden());
+   assert.equal(await input.inputValue(), value);
+  }
   const add = touchPage.locator('#add-cat');
   const first = touchPage.locator('#tab-cat1');
   const firstPoint = await first.boundingBox();
@@ -407,6 +429,23 @@ const { chromium } = require('playwright');
   const appearanceContext = await browser.newContext({ viewport: { width: 390, height: 1000 }, reducedMotion: 'no-preference' });
   const appearancePage = await appearanceContext.newPage();
   await appearancePage.goto('http://localhost:4783');
+  await appearancePage.setViewportSize({ width: 390, height: 480 });
+  for (const closeMode of ['button', 'selection', 'escape']) {
+   await appearancePage.evaluate(() => { window.scrollTo(0, 120); document.getElementById('tab-cat1').click(); });
+   assert.equal(await appearancePage.locator('body').evaluate(el => getComputedStyle(el).position), 'fixed');
+   assert.equal(await appearancePage.locator('#appearance-dialog').evaluate(el => getComputedStyle(el).overscrollBehaviorY), 'contain');
+   await appearancePage.locator('#appearance-dialog').hover();
+   await appearancePage.mouse.wheel(0, 900);
+   await appearancePage.waitForTimeout(200);
+   assert.equal(await appearancePage.locator('body').evaluate(el => el.getBoundingClientRect().top), -120);
+   assert.ok(await appearancePage.locator('#appearance-dialog').evaluate(el => el.scrollTop > 0), 'Only picker scrolls');
+   if (closeMode === 'button') await appearancePage.locator('#appearance-close').click();
+   else if (closeMode === 'selection') await appearancePage.locator('[data-appearance=black]').click();
+   else await appearancePage.keyboard.press('Escape');
+   await appearancePage.waitForFunction(() => !document.body.classList.contains('appearance-open'));
+   assert.equal(await appearancePage.evaluate(() => window.scrollY), 120, 'Closing restores page position');
+  }
+  await appearancePage.setViewportSize({ width: 390, height: 1000 });
   for (let i = 0; i < 5; i++) await appearancePage.locator('#add-cat').click();
   await appearancePage.waitForTimeout(600);
   await appearancePage.locator('#language summary').click();
