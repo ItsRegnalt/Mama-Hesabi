@@ -16,6 +16,10 @@ function saveSettings() {
   }
 }
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+function haptic(pattern = 8) {
+  if (reducedMotion.matches) return;
+  try { navigator.vibrate?.(pattern); } catch {}
+}
 const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
 let manualTheme = themeChoice !== null;
 function setTheme(theme) {
@@ -30,6 +34,7 @@ setTheme(themeChoice || (systemTheme.matches ? 'dark' : 'light'));
 systemTheme.addEventListener('change', event => { if (!manualTheme) setTheme(event.matches ? 'dark' : 'light'); });
 document.getElementById('theme-toggle').addEventListener('click', async event => {
   const button = event.currentTarget;
+  haptic();
   manualTheme = true;
   themeChoice = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
   const apply = () => { setTheme(themeChoice); saveSettings(); };
@@ -228,6 +233,7 @@ function requestRemoval(id) {
   pendingDeleteId = id;
   deleteDialog.returnValue = 'cancel';
   deleteDialog.showModal();
+  haptic(20);
 }
 let hold = null;
 let suppressTabClick = false;
@@ -247,12 +253,10 @@ catTabs.addEventListener('pointerdown', event => {
   const current = { tab, x: event.clientX, y: event.clientY };
   hold = current;
   tab.classList.add('holding');
-  navigator.vibrate?.(8);
   current.timer = setTimeout(() => {
     if (hold !== current) return;
     suppressTabClick = true;
     cancelHold();
-    navigator.vibrate?.(20);
     requestRemoval(tab.dataset.cat);
   }, 3000);
 });
@@ -274,6 +278,7 @@ deleteDialog.addEventListener('close', () => {
   if (deleteDialog.returnValue !== 'delete') return;
   const index = cats.findIndex(cat => cat.id === id);
   if (index < 0) return;
+  haptic([10, 40, 10]);
   cats.splice(index, 1);
   activeId = cats[Math.min(index, cats.length - 1)]?.id || null;
   render(); saveSettings();
@@ -284,7 +289,7 @@ deleteDialog.addEventListener('close', () => {
 document.getElementById('cat-tabs').addEventListener('click', event => {
   const tab = event.target.closest('[data-cat]');
   if (suppressTabClick && event.detail !== 0) { event.preventDefault(); suppressTabClick = false; return; }
-  if (tab) { activateCat(tab.dataset.cat); document.getElementById(`tab-${activeId}`).focus(); }
+  if (tab) { if (tab.dataset.cat !== activeId) haptic(); activateCat(tab.dataset.cat); document.getElementById(`tab-${activeId}`).focus(); }
 });
 document.getElementById('cat-tabs').addEventListener('keydown', event => {
   if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
@@ -295,6 +300,7 @@ document.getElementById('cat-tabs').addEventListener('keydown', event => {
   document.getElementById(`tab-${activeId}`).focus();
 });
 document.getElementById('add-cat').addEventListener('click', () => {
+  haptic(12);
   const color = palette.find(color => !cats.some(cat => cat.color === color)) || palette[cats.length % palette.length];
   const cat = newCat(`cat${nextCatId++}`, color);
   cats.push(cat); activeId = cat.id;
@@ -303,6 +309,7 @@ document.getElementById('add-cat').addEventListener('click', () => {
   document.getElementById(`${cat.id}-name`).focus();
 });
 document.addEventListener('click', event => {
+  if (event.target.closest('.field-info summary')) haptic();
   document.querySelectorAll('.field-info[open]').forEach(details => {
     if (!details.contains(event.target)) details.open = false;
   });
@@ -313,5 +320,8 @@ document.addEventListener('keydown', event => {
   if (details) { details.open = false; details.querySelector('summary').focus(); }
 });
 
-document.getElementById('language').addEventListener('change', event => { language = event.target.value === 'en' ? 'en' : 'tr'; saveSettings(); render(); });
+document.getElementById('cats').addEventListener('change', event => {
+  if (event.target.matches('select')) haptic();
+});
+document.getElementById('language').addEventListener('change', event => { haptic(); language = event.target.value === 'en' ? 'en' : 'tr'; saveSettings(); render(); });
 render();
