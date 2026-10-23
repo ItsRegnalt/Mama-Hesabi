@@ -79,7 +79,7 @@ const { chromium } = require('playwright');
    assert.equal(await page.locator('#tab-cat1 + .profile-name').innerText(), 'Örnek <kedi>');
    assert.equal(await page.locator('#tab-cat1 + .profile-name kedi').count(), 0);
    await page.locator('#tab-cat1').click();
-   assert.equal(await page.locator('#appearance-options button').count(), 12);
+   assert.equal(await page.locator('#appearance-options button').count(), 21);
    await page.locator('[data-appearance=black]').click();
    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('mama-payi-v3')).cats[0].appearance), 'black');
    assert.equal(await page.locator('#tab-cat1 .cat-portrait').getAttribute('viewBox'), '926 474 320 320');
@@ -404,6 +404,34 @@ const { chromium } = require('playwright');
   await railPage.locator('#theme-toggle').click();
   await railPage.screenshot({ path: process.env.TEMP + '/mamapayi-profiles-dark.png' });
   await railContext.close();
+  const appearanceContext = await browser.newContext({ viewport: { width: 390, height: 1000 }, reducedMotion: 'no-preference' });
+  const appearancePage = await appearanceContext.newPage();
+  await appearancePage.goto('http://localhost:4783');
+  for (const appearance of ['angora', 'van', 'anatolian', 'garfield', 'puss', 'grumpy', 'smudge', 'bingus', 'beluga']) {
+   await appearancePage.locator('#tab-cat1').click();
+   await appearancePage.locator('[data-appearance=' + appearance + ']').click();
+   await appearancePage.reload();
+   assert.equal(await appearancePage.evaluate(() => JSON.parse(localStorage.getItem('mama-payi-v3')).cats[0].appearance), appearance);
+   const asset = await appearancePage.locator('#tab-cat1 image').getAttribute('href');
+   assert.ok(await appearancePage.evaluate(async asset => {
+    const image = new Image(); image.src = asset;
+    try { await image.decode(); return image.naturalWidth === 1254; } catch { return false; }
+   }, asset), 'New portrait loads: ' + appearance);
+  }
+  for (let i = 0; i < 5; i++) await appearancePage.locator('#add-cat').click();
+  await appearancePage.waitForTimeout(600);
+  await appearancePage.locator('#language summary').click();
+  const noFlash = await appearancePage.evaluate(async () => {
+   document.querySelector('[data-language=en]').click();
+   await new Promise(requestAnimationFrame);
+   const rail = document.getElementById('cat-tabs').getBoundingClientRect();
+   return [...document.querySelectorAll('.profile-tab')].every(tab => {
+    const box = tab.getBoundingClientRect();
+    return box.left >= rail.left + 2 && box.right <= rail.right - 2 || getComputedStyle(tab).opacity === '0';
+   });
+  });
+  assert.ok(noFlash, 'Language rerender never flashes clipped profiles');
+  await appearanceContext.close();
   const hapticContext = await browser.newContext({ reducedMotion: 'no-preference' });
   await hapticContext.addInitScript(() => {
    window.hapticCalls = [];
@@ -452,7 +480,8 @@ const { chromium } = require('playwright');
     assert.equal(await page.locator('#save-status').textContent(), locale['Girdiğiniz bilgiler cihazınızda saklanır.'] || 'Girdiğiniz bilgiler cihazınızda saklanır.');
     const help = await page.locator('#install-title').boundingBox();
     const remove = await page.locator('#remove-cat').boundingBox();
-    assert.ok(help.x + help.width <= remove.x || help.y + help.height <= remove.y, 'Footer actions do not overlap: ' + lang + '/' + width);
+    assert.ok(Math.abs(help.y - remove.y) < 1 && help.x + help.width <= remove.x + 1, 'Footer actions do not overlap: ' + lang + '/' + width);
+    assert.equal(await page.locator('#install-title').evaluate(el => getComputedStyle(el).borderTopStyle), 'solid');
     await page.locator('#install-title').click();
     assert.equal(await page.locator('#install-instructions section').count(), 3);
     assert.ok(!(await page.locator('#install-instructions').innerText()).includes('Resmî'));

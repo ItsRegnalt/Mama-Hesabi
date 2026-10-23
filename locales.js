@@ -102,7 +102,12 @@ window.PatiLocales = {
     "Gümüş Tekir": "Silver Tabby",
     "Bağa": "Tortoiseshell",
     "Ragdoll": "Ragdoll",
-    "Sarman Beyaz": "Ginger & White"
+    "Sarman Beyaz": "Ginger & White",
+    "Ankara Kedisi": "Turkish Angora",
+    "Van Kedisi": "Turkish Van",
+    "Anadolu Kedisi": "Anatolian Cat",
+    "Ünlü Kediler": "Famous Cats",
+    "Çizmeli Kedi": "Puss in Boots"
   },
   "de": {
     "1× · Düşük aktivite": "1× · Geringe Aktivität",
@@ -207,7 +212,12 @@ window.PatiLocales = {
     "Gümüş Tekir": "Silber getigert",
     "Bağa": "Schildpatt",
     "Ragdoll": "Ragdoll",
-    "Sarman Beyaz": "Rot-weiß"
+    "Sarman Beyaz": "Rot-weiß",
+    "Ankara Kedisi": "Türkisch Angora",
+    "Van Kedisi": "Türkisch Van",
+    "Anadolu Kedisi": "Anatolische Katze",
+    "Ünlü Kediler": "Berühmte Katzen",
+    "Çizmeli Kedi": "Der gestiefelte Kater"
   },
   "es": {
     "1× · Düşük aktivite": "1× · Actividad baja",
@@ -312,6 +322,11 @@ window.PatiLocales = {
     "Gümüş Tekir": "Atigrado plateado",
     "Bağa": "Carey",
     "Ragdoll": "Ragdoll",
-    "Sarman Beyaz": "Naranja y blanco"
+    "Sarman Beyaz": "Naranja y blanco",
+    "Ankara Kedisi": "Angora Turco",
+    "Van Kedisi": "Van Turco",
+    "Anadolu Kedisi": "Gato de Anatolia",
+    "Ünlü Kediler": "Gatos Famosos",
+    "Çizmeli Kedi": "El Gato con Botas"
   }
 };

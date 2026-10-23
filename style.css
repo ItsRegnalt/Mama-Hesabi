@@ -144,9 +144,9 @@ footer { margin-top: 16px; text-align: left; color: var(--muted); font-size: 12p
 .footer-actions > .delete-cat { grid-area: 1 / 2; z-index: 1; max-width: 100%; }
 .footer-meta { display: grid; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); line-height: 1.5; }
 @media (max-width: 480px) {
-  .footer-actions { grid-template-columns: minmax(0, 1fr); gap: 4px; }
-  .footer-actions > details { grid-area: auto; }
-  .footer-actions > .delete-cat { grid-area: auto; justify-self: start; }
+  .footer-actions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 8px; }
+  .footer-actions #install-help > summary { width: calc((100% - 8px) / 2); padding: 6px 8px; }
+  .footer-actions > .delete-cat { justify-self: stretch; font-size: 13px; }
 }
 .error { margin-top: 8px; }
 
@@ -255,7 +255,7 @@ footer { margin-top: 16px; text-align: left; color: var(--muted); font-size: 12p
 }
 
 #install-help { margin: 0; font-size: 13px; }
-#install-help > summary { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; width: fit-content; margin: 0; padding: 0 12px; cursor: pointer; border-radius: 14px; list-style: none; }
+#install-help > summary { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; width: fit-content; margin: 0; padding: 0 12px; cursor: pointer; border: 1px solid var(--line); border-radius: 14px; list-style: none; }
 #install-help > summary::-webkit-details-marker { display: none; }
 #install-help > summary::after { content: '+'; font-size: 18px; }
 #install-help[open] > summary::after { content: '−'; }
@@ -270,3 +270,5 @@ footer { margin-top: 16px; text-align: left; color: var(--muted); font-size: 12p
 @media (prefers-reduced-motion: no-preference) {
   #install-help[open] > #install-instructions { animation: surface-in 200ms var(--ease-out); }
 }
+
+.appearance-group { grid-column: 1 / -1; margin: 12px 0 0; font-size: 13px; color: var(--muted); }

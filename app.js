@@ -60,6 +60,9 @@ const catTypes = [
   ['gray','Gri','Gray'], ['white','Beyaz','White'], ['siamese','Siyam','Siamese'], ['black','Siyah','Black'],
   ['silver','Gümüş Tekir','Silver Tabby'], ['tortie','Bağa','Tortoiseshell'], ['ragdoll','Ragdoll','Ragdoll'], ['bicolor','Sarman Beyaz','Ginger & White']
 ];
+const regionalCatTypes = [['angora','Ankara Kedisi'], ['van','Van Kedisi'], ['anatolian','Anadolu Kedisi']];
+const famousCatTypes = [['garfield','Garfield'], ['puss','Çizmeli Kedi'], ['grumpy','Grumpy Cat'], ['smudge','Smudge'], ['bingus','Bingus'], ['beluga','Beluga']];
+const appearanceTypes = [...catTypes, ...regionalCatTypes, ...famousCatTypes];
 const newCat = (id, color = 'blue', appearance = 'tabby') => ({ id, color, appearance, name: '', weight: '', ideal: '', factor: '1', food: '', calories: '', automatic: false, portion: '' });
 const storedCats = Array.isArray(saved.cats) ? saved.cats.filter(cat => cat && typeof cat === 'object') : [];
 let cats = (Array.isArray(saved.cats) ? storedCats : [newCat('cat1')]).map((stored, index) => {
@@ -69,7 +72,7 @@ let cats = (Array.isArray(saved.cats) ? storedCats : [newCat('cat1')]).map((stor
     const limit = key === 'food' ? 200 : key === 'name' ? 60 : 12;
     if (key === 'automatic' ? typeof stored[key] === 'boolean' : typeof stored[key] === 'string' && stored[key].length <= limit) cat[key] = stored[key];
   }
-  if (!catTypes.some(type => type[0] === cat.appearance)) cat.appearance = catTypes[index % catTypes.length][0];
+  if (!appearanceTypes.some(type => type[0] === cat.appearance)) cat.appearance = catTypes[index % catTypes.length][0];
   if (!palette.includes(cat.color)) cat.color = palette[index % palette.length];
   if (!['0.8', '1', '1.2', '1.4', '1.8', '2', '2.5'].includes(cat.factor)) cat.factor = '1';
   return cat;
@@ -111,6 +114,15 @@ const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({ '&
 const factors = [['0.8', '0,8× · Kilo verme'], ['1', '1× · Düşük aktivite'], ['1.2', '1,2× · Kısır yetişkin'], ['1.4', '1,4× · Kısır olmayan yetişkin'], ['2.5', '2,5× · Büyüme dönemi']];
 const infoIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></svg>';
 function catIcon(cat) {
+  if (regionalCatTypes.some(type => type[0] === cat.appearance)) {
+    return `<svg class="cat-portrait" viewBox="100 100 1054 1054" aria-hidden="true"><image href="cat-${cat.appearance}.png" width="1254" height="1254"/></svg>`;
+  }
+  const famous = famousCatTypes.findIndex(type => type[0] === cat.appearance);
+  if (famous >= 0) {
+    const boxes = ['0 180 410 430', '410 100 485 510', '850 205 404 405', '0 635 425 480', '425 635 425 480', '840 635 414 480'];
+    const clips = ['0px 180px, 410px 180px, 410px 610px, 0px 610px', '410px 100px, 900px 100px, 900px 220px, 850px 300px, 850px 610px, 410px 610px', '900px 205px, 1254px 205px, 1254px 610px, 850px 610px, 850px 360px', '0px 735px, 425px 735px, 425px 1115px, 0px 1115px', '425px 635px, 855px 635px, 855px 870px, 775px 980px, 775px 1115px, 510px 1115px, 510px 1000px, 425px 870px', '865px 710px, 1254px 710px, 1254px 1115px, 825px 1115px, 825px 915px, 865px 850px'];
+    return `<svg class="cat-portrait" viewBox="${boxes[famous]}" aria-hidden="true"><image href="famous-cat-portraits.png" width="1254" height="1254" style="clip-path:polygon(${clips[famous]})"/></svg>`;
+  }
   const index = Math.max(0, catTypes.findIndex(type => type[0] === cat.appearance));
   // The generated sheet is not a uniform grid; center each portrait on its visible bounds.
   const origins = [[6,146],[315,146],[618,146],[926,145],[5,473],[312,474],[619,473],[926,474],[6,796],[313,796],[619,797],[927,797]];
@@ -172,7 +184,7 @@ function renderTabs() {
   const rail = document.getElementById('cat-tabs');
   const previousScroll = rail.scrollLeft;
   rail.parentElement.classList.toggle('multiple', cats.length > 0);
-  document.getElementById('cat-tabs').innerHTML = cats.map((cat, index) => `<div class="profile-tab" role="presentation"><button type="button" role="tab" id="tab-${cat.id}" aria-controls="${cat.id}" aria-selected="${cat.id === activeId}" tabindex="${cat.id === activeId ? 0 : -1}" data-cat="${cat.id}" data-color="${cat.color}" aria-label="${escapeHtml(catName(cat, index))}" title="${escapeHtml(catName(cat, index))}" aria-describedby="cat-actions-hint" aria-keyshortcuts="Delete Shift+F10">${catIcon(cat)}${customizeIcon}</button><span class="profile-name" aria-hidden="true" title="${escapeHtml(catName(cat, index))}">${escapeHtml(catName(cat, index))}</span></div>`).join('');
+  document.getElementById('cat-tabs').innerHTML = cats.map((cat, index) => `<div class="profile-tab outside-rail" role="presentation"><button type="button" role="tab" id="tab-${cat.id}" aria-controls="${cat.id}" aria-selected="${cat.id === activeId}" tabindex="${cat.id === activeId ? 0 : -1}" data-cat="${cat.id}" data-color="${cat.color}" aria-label="${escapeHtml(catName(cat, index))}" title="${escapeHtml(catName(cat, index))}" aria-describedby="cat-actions-hint" aria-keyshortcuts="Delete Shift+F10">${catIcon(cat)}${customizeIcon}</button><span class="profile-name" aria-hidden="true" title="${escapeHtml(catName(cat, index))}">${escapeHtml(catName(cat, index))}</span></div>`).join('');
   document.getElementById('cat-tabs').setAttribute('aria-label', t('Kediler'));
   document.getElementById('add-cat').setAttribute('aria-label', t('Kedi ekle'));
   document.getElementById('add-cat').title = t('Kedi ekle');
@@ -319,7 +331,8 @@ function openAppearance() {
   document.getElementById('appearance-title').textContent = t('Kedi görünümü');
   document.getElementById('appearance-close').textContent = t('Tamam');
   appearanceDialog.dataset.color = cat.color;
-  document.getElementById('appearance-options').innerHTML = catTypes.map(type => `<button type="button" data-appearance="${type[0]}" aria-pressed="${cat.appearance === type[0]}">${catIcon({appearance:type[0]})}<span>${escapeHtml(t(type[1]))}</span></button>`).join('');
+  const options = types => types.map(type => `<button type="button" data-appearance="${type[0]}" aria-pressed="${cat.appearance === type[0]}">${catIcon({appearance:type[0]})}<span>${escapeHtml(t(type[1]))}</span></button>`).join('');
+  document.getElementById('appearance-options').innerHTML = options(catTypes) + options(regionalCatTypes) + `<h3 class="appearance-group">${t('Ünlü Kediler')}</h3>` + options(famousCatTypes);
   appearanceDialog.showModal();
   appearanceDialog.querySelector('[aria-pressed="true"]').focus();
 }

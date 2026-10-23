@@ -25,3 +25,5 @@ server.listen(4783, '0.0.0.0', () => {
     if (address.family === 'IPv4' && !address.internal) console.log(`iPhone (ayni Wi-Fi): http://${address.address}:4783`);
   }
 });
+
+for (const name of ['famous-cat-portraits', 'cat-angora', 'cat-van', 'cat-anatolian']) files[`/${name}.png`] = [`${name}.png`, 'image/png'];
