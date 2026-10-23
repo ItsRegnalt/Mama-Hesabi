@@ -36,20 +36,29 @@
 body { margin: 0; line-height: 1.5; }
 main { max-width: 680px; padding: 32px 24px; margin: auto; }
 .toolbar { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 20px; }
-.language-control { position: relative; display: grid; place-items: center; width: 44px; height: 44px; margin: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--muted); }
+.language-control { flex-shrink: 0; position: relative; display: grid; place-items: center; width: 44px; height: 44px; margin: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--muted); }
 .language-control select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 .toolbar svg { width: 22px; height: 22px; pointer-events: none; }
-.theme-controls { display: flex; gap: 4px; }
+.theme-controls { flex-shrink: 0; display: flex; gap: 4px; }
 .theme-controls button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--muted); cursor: pointer; }
 .theme-controls button[aria-pressed=true] { background: var(--selected); color: var(--selected-ink); border-color: var(--selected); }
 .theme-controls button:focus-visible, .language-control:focus-within, .delete-cat:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .delete-cat { display: block; margin-top: 24px; min-height: 44px; padding: 8px 12px; font: inherit; font-size: 14px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--error); cursor: pointer; }
 .delete-cat:hover { background: var(--error-bg); }
 .cats { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
-.cat { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; padding: 24px; --accent: #1456a0; --tint: #d9e8fb; }
-.cat2 { --accent: #17613a; --tint: #d5f0df; }
-:root[data-theme=dark] .cat { --accent: #a8cfff; --tint: #182c46; }
-:root[data-theme=dark] .cat2 { --accent: #9cdeb6; --tint: #183526; }
+.cat { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; padding: 24px; }
+[data-color=blue] { --accent: #315d8b; --tint: #dce8f3; }
+[data-color=green] { --accent: #396647; --tint: #dfecdb; }
+[data-color=rose] { --accent: #8b455d; --tint: #f3dfe5; }
+[data-color=amber] { --accent: #795b2d; --tint: #f3e8ce; }
+[data-color=purple] { --accent: #66518a; --tint: #e8e0f2; }
+[data-color=teal] { --accent: #306865; --tint: #d8ece8; }
+:root[data-theme=dark] [data-color=blue] { --accent: #b5cfe8; --tint: #243447; }
+:root[data-theme=dark] [data-color=green] { --accent: #bad6b1; --tint: #2a392b; }
+:root[data-theme=dark] [data-color=rose] { --accent: #e5b9c8; --tint: #422d35; }
+:root[data-theme=dark] [data-color=amber] { --accent: #e1c994; --tint: #3e3525; }
+:root[data-theme=dark] [data-color=purple] { --accent: #ccbee5; --tint: #352e43; }
+:root[data-theme=dark] [data-color=teal] { --accent: #acd6ce; --tint: #253b37; }
 .cat-head, .field-grid, .portion-box { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 16px; align-items: start; }
 .cat-head { margin-bottom: 24px; }
 .result { background: var(--tint); border-radius: 14px; padding: 20px; margin-bottom: 24px; color: var(--accent); }
@@ -92,15 +101,24 @@ option { color: var(--ink); background: var(--paper); }
   main { padding-top: max(16px, env(safe-area-inset-top)); padding-bottom: max(16px, env(safe-area-inset-bottom)); }
 }
 
-.cat-navigation { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.cat-navigation { display: flex; flex: 1; min-width: 0; align-items: center; gap: 4px; }
 #cat-tabs { display: flex; gap: 6px; overflow-x: auto; min-width: 0; padding: 3px; }
-.cat-navigation button { font: inherit; font-size: 14px; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); padding: 8px 12px; cursor: pointer; }
-#cat-tabs button { flex-shrink: 0; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#cat-tabs [aria-selected=true] { background: var(--selected); color: var(--selected-ink); border-color: var(--selected); }
-#add-cat { flex-shrink: 0; margin-left: auto; }
+.cat-navigation button { display: flex; align-items: center; justify-content: center; gap: 4px; font: inherit; font-size: 14px; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); padding: 8px 12px; cursor: pointer; }
+#cat-tabs button { flex-shrink: 0; min-width: 44px; padding: 8px; color: var(--accent); background: var(--tint); border-color: transparent; }
+#cat-tabs [aria-selected=true] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+#add-cat { flex-shrink: 0; width: 44px; height: 44px; padding: 0; border-radius: 50%; }
 .cat-navigation button:focus-visible, summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
-.calculation-help { margin-top: 8px; font-size: 13px; color: var(--muted); }
-.calculation-help summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; text-decoration: underline; text-underline-offset: 3px; }
-.calculation-help p { margin: 8px 0; }
+.label-row { display: flex; align-items: center; position: relative; min-height: 44px; margin-bottom: 4px; }
+.label-row label { margin: 0; }
+.field-info { margin-left: 2px; }
+.field-info summary { display: grid; place-items: center; width: 44px; height: 44px; cursor: pointer; list-style: none; color: var(--muted); border-radius: 8px; }
+.field-info summary::-webkit-details-marker { display: none; }
+.field-info summary svg { width: 18px; height: 18px; }
+.field-info[open] summary { background: var(--bg); color: var(--ink); }
+.info-content { position: absolute; z-index: 2; top: 100%; left: 0; width: min(280px, 100%); padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--paper); color: var(--ink); box-shadow: 0 4px 16px #0002; font-size: 13px; }
+.info-content p { margin: 0; }
+.info-content p + p { margin-top: 8px; }
+footer { margin-top: 32px; text-align: center; color: var(--muted); font-size: 12px; }
+.save-status { margin: 0; font-size: 12px; }
+#copyright { margin: 12px 0 0; }
 .error { margin-top: 8px; }
-.save-status { margin: 12px 4px 0; }

@@ -17,6 +17,7 @@
 <body>
   <main>
     <div class="toolbar">
+      <div class="cat-navigation"><div id="cat-tabs" role="tablist" aria-label="Kediler"></div><button type="button" id="add-cat" aria-label="Kedi ekle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
       <label class="language-control" for="language" title="Dil / Language">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a18 18 0 0 1 0 18 18 18 0 0 1 0-18Z"/></svg>
         <select id="language" aria-label="Dil / Language"><option value="tr">Türkçe</option><option value="en">English</option></select>
@@ -26,9 +27,8 @@
         <button type="button" data-theme-choice="dark" aria-label="Koyu" title="Koyu" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 13.2A9 9 0 0 1 10.8 3.5a9 9 0 1 0 9.7 9.7Z"/></svg></button>
       </div>
     </div>
-    <div class="cat-navigation"><div id="cat-tabs" role="tablist" aria-label="Kediler"></div><button type="button" id="add-cat">+ Kedi ekle</button></div>
     <section class="cats" id="cats" aria-label="Kedilerin beslenme ayarları"></section>
-    <p id="save-status" class="hint save-status" role="status"></p>
+    <footer><p id="save-status" class="hint save-status" role="status"></p><p id="copyright"></p></footer>
   </main>
 </body>
 </html>

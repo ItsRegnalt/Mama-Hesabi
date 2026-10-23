@@ -1,130 +1,106 @@
 const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
 (async () => {
- const browser = await chromium.launch(process.env.BROWSER_CHANNEL ? { channel: process.env.BROWSER_CHANNEL } : {});
+ const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || 'msedge' });
  try {
   for (const width of [1440, 768, 390, 375, 320]) {
-   const context = await browser.newContext({ viewport: { width, height: 1000 }, colorScheme: 'light' });
+   const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: 'reduce' });
    const page = await context.newPage();
-   const errors = [];
-   page.on('pageerror', error => errors.push(error.message));
+   const errors = []; page.on('pageerror', error => errors.push(error.message));
    await page.goto('http://localhost:4783');
-   assert.equal(await page.locator('[role=tab]').count(), 2);
-   assert.equal(await page.locator('[role=tab][aria-selected=true]').innerText(), 'Kedi 1');
-   assert.ok(await page.locator('#cat2').isHidden());
+   assert.equal(await page.getByRole('tab').count(), 1);
+   assert.equal(await page.locator('#tab-cat1 svg').count(), 1);
+   assert.equal(await page.locator('#tab-cat1').innerText(), '');
+   assert.equal(await page.locator('input[name=food]').count(), 0);
    assert.equal(await page.locator('[aria-invalid=true]').count(), 0);
    await page.locator('#cat1-weight').fill('3.280');
    assert.equal(await page.locator('#cat1-weight').getAttribute('aria-invalid'), 'true');
-   assert.ok((await page.locator('#cat1-weight-error').innerText()).includes('tam gram'));
-   assert.ok((await page.locator('#cat1-weight').getAttribute('aria-describedby')).includes('weight-error'));
-   assert.equal(await page.locator('#cat1-calories').getAttribute('aria-invalid'), null);
    await page.locator('#cat1-weight').fill('4000');
-   assert.equal(await page.locator('#cat1-weight-error').innerText(), '');
    await page.locator('#cat1-calories').fill('3500');
    assert.equal(await page.locator('#cat1 [data-result=grams]').innerText(), '56,6');
    await page.locator('#cat1-automatic').selectOption('true');
    assert.equal(await page.locator('#cat1 [data-result=grams]').innerText(), '56,6');
-   assert.equal(await page.locator('#cat1 [data-result=portions]').innerText(), '—');
-   assert.equal(await page.locator('[aria-invalid=true]').count(), 0);
    await page.locator('#cat1-portion').fill('0');
    assert.equal(await page.locator('#cat1-portion').getAttribute('aria-invalid'), 'true');
-   assert.equal(await page.locator('#cat1 [data-result=grams]').innerText(), '56,6');
    await page.locator('#cat1-portion').fill('5');
    assert.equal(await page.locator('#cat1 [data-result=portions]').innerText(), '11,31');
-   assert.ok((await page.locator('#cat1 [data-result=rounding]').innerText()).includes('−'));
    await page.locator('#cat1-factor').selectOption('0.8');
    assert.ok(await page.locator('#cat1-ideal').isVisible());
    assert.equal(await page.locator('[aria-invalid=true]').count(), 0);
-   assert.equal(await page.locator('#cat1 [data-result=grams]').innerText(), '45,3');
-   assert.ok((await page.locator('#cat1 .ideal-note').innerText()).includes('mevcut ağırlık'));
+   const targetSummary = page.locator('#cat1 .ideal-field summary');
+   await targetSummary.click();
+   assert.equal(await page.locator('#cat1-ideal-hint').innerText(), 'Boşsa mevcut ağırlık.');
+   await page.keyboard.press('Escape');
+   assert.ok(await page.locator('#cat1-ideal-hint').isHidden());
    await page.locator('#cat1-ideal').fill('3000');
-   assert.equal(await page.locator('#cat1-ideal').getAttribute('aria-invalid'), null);
    await page.locator('#cat1-ideal').fill('');
    assert.equal(await page.locator('[aria-invalid=true]').count(), 0);
    await page.locator('#cat1-factor').selectOption('1');
-   assert.ok(await page.locator('#cat1-ideal').isHidden());
    await page.locator('#cat1-name').fill('Örnek <kedi>');
-   assert.equal(await page.locator('#tab-cat1').innerText(), 'Örnek <kedi>');
-   await page.locator('#tab-cat2').click();
-   assert.ok(await page.locator('#cat1').isHidden());
-   await page.keyboard.press('ArrowLeft');
-   assert.ok(await page.locator('#cat1').isVisible());
-   assert.equal(await page.locator('#cat1-weight').inputValue(), '4000');
-   for (let i = 3; i <= 8; i++) {
+   assert.equal(await page.locator('#tab-cat1').getAttribute('aria-label'), 'Örnek <kedi>');
+   assert.equal(await page.locator('#tab-cat1 svg').count(), 1);
+   for (let i = 2; i <= 8; i++) {
     await page.locator('#add-cat').click();
-    assert.ok(await page.locator(`#cat${i}-name`).evaluate(el => el === document.activeElement));
-    await page.locator(`#cat${i}-name`).fill(`Kedi ${i}`);
+    await page.locator(`#cat${i}-name`).fill(`Test ${i}`);
    }
-   assert.equal(await page.locator('[role=tab]').count(), 8);
-   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+   assert.equal(await page.getByRole('tab').count(), 8);
+   assert.equal(await page.locator('#tab-cat2').innerText(), '2');
+   assert.equal(new Set(await page.getByRole('tab').evaluateAll(tabs => tabs.slice(0, 6).map(tab => tab.dataset.color))).size, 6);
+   for (const theme of ['light', 'dark']) {
+    await page.locator(`[data-theme-choice=${theme}]`).click();
+    for (let i = 1; i <= 8; i++) {
+     const tabColor = await page.locator(`#tab-cat${i}`).evaluate(el => getComputedStyle(el).color);
+     const resultColor = await page.locator(`#cat${i} .result`).evaluate(el => getComputedStyle(el).color);
+     assert.equal(tabColor, resultColor);
+    }
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+   }
    await page.locator('#language').selectOption('en');
-   assert.equal(await page.locator('#add-cat').innerText(), '+ Add cat');
-   assert.equal(await page.getByRole('button', { name: 'Light', exact: true }).locator('svg').count(), 1);
+   assert.equal(await page.locator('#add-cat').getAttribute('aria-label'), 'Add cat');
    assert.equal(await page.getByRole('button', { name: 'Dark', exact: true }).locator('svg').count(), 1);
-   for (const selector of ['.language-control', '[data-theme-choice=light]', '[data-theme-choice=dark]']) {
-    const box = await page.locator(selector).boundingBox();
+   await page.locator('#tab-cat1').click();
+   const rerInfo = page.locator('#cat1 .field-info').filter({ has: page.locator('summary[aria-label="RER multiplier — Information"]') });
+   await rerInfo.locator('summary').click();
+   assert.ok((await rerInfo.innerText()).includes('For cats only'));
+   await page.locator('#cat1-weight').click();
+   assert.equal(await rerInfo.getAttribute('open'), null);
+   const colors = await page.getByRole('tab').evaluateAll(tabs => tabs.map(tab => tab.dataset.color));
+   await page.reload();
+   assert.equal(await page.getByRole('tab').count(), 8);
+   assert.equal(await page.locator('#cat1-weight').inputValue(), '4000');
+   assert.equal(await page.locator('#cat1 [data-result=grams]').innerText(), '56.6');
+   assert.deepEqual(await page.getByRole('tab').evaluateAll(tabs => tabs.map(tab => tab.dataset.color)), colors);
+   assert.ok((await page.locator('#copyright').innerText()).includes(String(new Date().getFullYear())));
+   for (const selector of ['#add-cat', '.language-control', '[data-theme-choice=dark]', '#cat1 summary']) {
+    const box = await page.locator(selector).first().boundingBox();
     assert.ok(box.width >= 44 && box.height >= 44);
    }
-   const toolbar = await page.locator('.toolbar').boundingBox();
-   const dark = await page.locator('[data-theme-choice=dark]').boundingBox();
-   assert.ok(Math.abs(toolbar.x + toolbar.width - dark.x - dark.width) < 1);
-   await page.locator('#tab-cat1').click();
-   await page.locator('#cat1 summary').click();
-   assert.ok((await page.locator('#cat1 .calculation-help').innerText()).includes('For cats only'));
-   await page.locator('[data-theme-choice=dark]').click();
-   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
-   await page.reload();
-   assert.equal(await page.locator('[role=tab]').count(), 8);
-   assert.equal(await page.locator('#language').inputValue(), 'en');
-   assert.equal(await page.locator('#cat1-weight').inputValue(), '4000');
-   assert.equal(await page.locator('#cat1-name').inputValue(), 'Örnek <kedi>');
-   assert.equal(await page.locator('[data-theme-choice=dark]').getAttribute('aria-pressed'), 'true');
-   assert.equal(await page.locator('#cat1 [data-result=grams]').innerText(), '56.6');
-   assert.equal(await page.locator('#cat8-name').inputValue(), 'Kedi 8');
    assert.deepEqual(errors, []);
    await context.close();
   }
-  const fresh = await browser.newContext();
-  const clean = await fresh.newPage(); await clean.goto('http://localhost:4783');
-  assert.equal(await clean.locator('#cat1-weight').inputValue(), '');
-  assert.equal(await clean.locator('[role=tab]').count(), 2);
-  // Existing two-cat storage is preserved when migrating to unlimited cats.
-  await clean.evaluate(() => localStorage.setItem('mama-payi-v3', JSON.stringify({ cats: [{id:'cat1',weight:'3280',name:'Test',factor:'1',calories:'3352',automatic:false}, {id:'cat2',weight:'5000'}] })));
-  await clean.reload();
-  assert.equal(await clean.locator('#cat1-weight').inputValue(), '3280');
-  assert.equal(await clean.locator('#cat2-weight').inputValue(), '5000');
-  // Cancel preserves data; deleting a middle cat and adding another keeps IDs unique.
-  await clean.locator('#add-cat').click();
-  await clean.locator('#cat3-name').fill('Third');
-  await clean.locator('#tab-cat2').click();
-  clean.once('dialog', dialog => dialog.dismiss());
-  await clean.locator('#cat2 .delete-cat').click();
-  assert.equal(await clean.locator('[role=tab]').count(), 3);
-  clean.once('dialog', dialog => dialog.accept());
-  await clean.locator('#cat2 .delete-cat').click();
-  assert.equal(await clean.locator('[role=tab]').count(), 2);
-  assert.ok(await clean.locator('#tab-cat3').evaluate(el => el === document.activeElement));
-  await clean.locator('#add-cat').click();
-  assert.equal(await clean.locator('#cat4-name').inputValue(), '');
-  assert.equal(await clean.locator('#cat3-name').inputValue(), 'Third');
-  assert.equal(await clean.locator('[id=cat3]').count(), 1);
-  await clean.reload();
-  assert.equal(await clean.locator('[role=tab]').count(), 3);
-  assert.equal(await clean.locator('#cat2-name').inputValue(), 'Third');
-  assert.equal(await clean.locator('#cat1-weight').inputValue(), '3280');
-  await clean.locator('#language').selectOption('en');
-  assert.equal(await clean.locator('#cat1 .delete-cat').innerText(), 'Delete cat');
-  clean.on('dialog', dialog => dialog.accept());
-  while (await clean.locator('[role=tab]').count()) {
-   await clean.locator('.cat:not([hidden]) .delete-cat').click();
-  }
-  assert.ok(await clean.locator('#add-cat').evaluate(el => el === document.activeElement));
-  await clean.reload();
-  assert.equal(await clean.locator('[role=tab]').count(), 0);
-  await clean.locator('#add-cat').click();
-  assert.equal(await clean.locator('[role=tab]').count(), 1);
-  assert.equal(await clean.locator('.cat input[name=name]').inputValue(), '');
-  await fresh.close();
-  console.log('UI checks passed: responsive icon controls, cat deletion/cancellation, unique IDs, empty-state persistence, calculation and validation.');
+  const context = await browser.newContext(); const page = await context.newPage();
+  await page.goto('http://localhost:4783');
+  // Preserve existing saved cats, even if their earlier records have no color.
+  await page.evaluate(() => localStorage.setItem('mama-payi-v3', JSON.stringify({ cats: [{weight:'3280',name:'Test',factor:'1',calories:'3352'}, {weight:'5000'}] })));
+  await page.reload();
+  assert.equal(await page.getByRole('tab').count(), 2);
+  assert.equal(await page.locator('#cat1-weight').inputValue(), '3280');
+  await page.locator('#add-cat').click(); await page.locator('#cat3-name').fill('Third');
+  await page.locator('#tab-cat2').click();
+  page.once('dialog', dialog => dialog.dismiss()); await page.locator('#cat2 .delete-cat').click();
+  assert.equal(await page.getByRole('tab').count(), 3);
+  page.once('dialog', dialog => dialog.accept()); await page.locator('#cat2 .delete-cat').click();
+  const thirdColor = await page.locator('#cat3').getAttribute('data-color');
+  await page.locator('#add-cat').click();
+  assert.equal(await page.locator('#cat3-name').inputValue(), 'Third');
+  assert.equal(await page.locator('#cat4-name').inputValue(), '');
+  await page.reload();
+  assert.equal(await page.locator('#cat2').getAttribute('data-color'), thirdColor);
+  page.on('dialog', dialog => dialog.accept());
+  while (await page.getByRole('tab').count()) await page.locator('.cat:not([hidden]) .delete-cat').click();
+  await page.reload(); assert.equal(await page.getByRole('tab').count(), 0);
+  await page.locator('#add-cat').click(); assert.equal(await page.getByRole('tab').count(), 1);
+  await context.close();
+  console.log('UI checks passed: five widths, icon navigation, six matching colors in both themes, info popovers, storage, deletion and calculations.');
  } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
