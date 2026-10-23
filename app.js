@@ -186,7 +186,7 @@ function showError(card, key, message) {
 }
 function render() {
 document.getElementById('cats').innerHTML = cats.map(cat => `<article class="cat" data-color="${cat.color}" id="${cat.id}" role="tabpanel" aria-labelledby="tab-${cat.id}"${cat.id === activeId ? '' : ' hidden'}>
-  <div class="cat-head"><div class="field"><label for="${cat.id}-name">Kedi adı</label><div class="input-wrap"><input id="${cat.id}-name" name="name" value="${escapeHtml(cat.name)}" maxlength="60" autocomplete="off"></div></div><div class="field"><label for="${cat.id}-automatic">Besleme yöntemi</label><div class="input-wrap"><select id="${cat.id}-automatic" name="automatic"><option value="true"${cat.automatic ? ' selected' : ''}>Otomat</option><option value="false"${!cat.automatic ? ' selected' : ''}>Elle besleme</option></select></div></div></div>
+  <div class="cat-head"><div class="field"><label for="${cat.id}-name">Kedi adı</label><div class="input-wrap"><input id="${cat.id}-name" name="name" value="${escapeHtml(cat.name)}" maxlength="60" autocomplete="off" enterkeyhint="done"></div></div><div class="field"><label for="${cat.id}-automatic">Besleme yöntemi</label><div class="input-wrap"><select id="${cat.id}-automatic" name="automatic"><option value="true"${cat.automatic ? ' selected' : ''}>Otomat</option><option value="false"${!cat.automatic ? ' selected' : ''}>Elle besleme</option></select></div></div></div>
   <div class="result" role="status" aria-atomic="true"><span class="result-label">Tahmini günlük mama miktarı</span><div class="result-main"><strong data-result="grams">—</strong><span>gram / gün</span></div><div class="result-meta" data-result="meta"></div></div>
   <div class="fields"><div class="field-grid">
     ${input(cat, 'weight', 'Mevcut ağırlık (g)', '', true)}
@@ -263,6 +263,11 @@ function update() {
   }
 }
 
+document.getElementById('cats').addEventListener('keydown', event => {
+  if (event.key !== 'Enter' || event.isComposing || !event.target.matches('input[name="name"]')) return;
+  event.preventDefault();
+  event.target.blur();
+});
 document.getElementById('cats').addEventListener('input', event => {
   if (!event.target.name) return;
   const cat = cats.find(cat => cat.id === event.target.closest('.cat').id);
