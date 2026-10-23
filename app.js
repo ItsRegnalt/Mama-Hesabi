@@ -275,7 +275,7 @@ document.querySelector('.cat-navigation').addEventListener('pointerdown', event 
     cancelHold();
     if (tab.id === 'add-cat') addCat();
     else requestRemoval(tab.dataset.cat);
-  }, tab.id === 'add-cat' ? 1500 : 3000);
+  }, tab.id === 'add-cat' ? 400 : 800);
 });
 document.querySelector('.cat-navigation').addEventListener('contextmenu', event => event.preventDefault());
 document.addEventListener('pointermove', event => {
