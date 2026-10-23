@@ -70,7 +70,7 @@ function translatePage() {
   document.documentElement.lang = language;
   document.title = language === 'en' ? 'Cat Food Calculator' : 'Kedi Mama Hesabı';
   document.getElementById('language').value = language;
-  document.getElementById('copyright').textContent = `© ${new Date().getFullYear()} ${language === 'en' ? 'Cat Food Calculator' : 'Kedi Mama Hesabı'}`;
+  document.getElementById('copyright').textContent = `© ${new Date().getFullYear()} Vivid Creative Works · ${language === 'en' ? 'An open-source hobby project.' : 'Açık kaynak bir hobi projesi.'}`;
   setTheme(document.documentElement.dataset.theme);
   for (const [id, text] of [['delete-question', 'Bu kedi profilini kaldırmak ister misin?'], ['delete-no', 'Hayır'], ['delete-yes', 'Evet']]) document.getElementById(id).textContent = t(text);
   document.getElementById('cats').setAttribute('aria-label', language === 'en' ? 'Cat feeding settings' : 'Kedi beslenme ayarları');
