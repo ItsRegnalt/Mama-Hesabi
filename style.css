@@ -4,7 +4,8 @@
   background: var(--bg);
   color-scheme: light;
   font-synthesis: none;
-  --bg: #f2f3f7;
+  --light-bg: #f2f3f7;
+  --bg: var(--light-bg);
   --paper: #fafafa;
   --ink: #212121;
   --muted: #616161;
@@ -47,12 +48,12 @@ main { max-width: 680px; padding: 32px 24px; margin: auto; }
 .delete-cat:hover { background: var(--error-bg); }
 .cats { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
 .cat { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; padding: 24px; }
-[data-color=blue] { --accent: #315d8b; --tint: #dce8f3; }
-[data-color=green] { --accent: #396647; --tint: #dfecdb; }
-[data-color=rose] { --accent: #8b455d; --tint: #f3dfe5; }
-[data-color=amber] { --accent: #795b2d; --tint: #f3e8ce; }
-[data-color=purple] { --accent: #66518a; --tint: #e8e0f2; }
-[data-color=teal] { --accent: #306865; --tint: #d8ece8; }
+[data-color=blue] { --icon-ink: #315d8b; --accent: var(--icon-ink); --tint: #dce8f3; }
+[data-color=green] { --icon-ink: #396647; --accent: var(--icon-ink); --tint: #dfecdb; }
+[data-color=rose] { --icon-ink: #8b455d; --accent: var(--icon-ink); --tint: #f3dfe5; }
+[data-color=amber] { --icon-ink: #795b2d; --accent: var(--icon-ink); --tint: #f3e8ce; }
+[data-color=purple] { --icon-ink: #66518a; --accent: var(--icon-ink); --tint: #e8e0f2; }
+[data-color=teal] { --icon-ink: #306865; --accent: var(--icon-ink); --tint: #d8ece8; }
 :root[data-theme=dark] [data-color=blue] { --accent: #b5cfe8; --tint: #243447; }
 :root[data-theme=dark] [data-color=green] { --accent: #bad6b1; --tint: #2a392b; }
 :root[data-theme=dark] [data-color=rose] { --accent: #e5b9c8; --tint: #422d35; }
@@ -106,6 +107,8 @@ option { color: var(--ink); background: var(--paper); }
 #cat-tabs { display: flex; gap: 6px; overflow-x: auto; min-width: 0; padding: 3px; }
 .cat-navigation button { display: flex; align-items: center; justify-content: center; gap: 4px; font: inherit; font-size: 14px; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); padding: 8px 12px; cursor: pointer; }
 #cat-tabs button { flex-shrink: 0; min-width: 44px; padding: 8px; color: var(--accent); background: var(--tint); border-color: transparent; }
+#cat-tabs svg:not(.hold-ring) { color: var(--icon-ink); }
+#cat-tabs svg:not(.hold-ring) > path:first-child { fill: var(--light-bg); }
 #cat-tabs [aria-selected=true] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 #add-cat { flex-shrink: 0; width: 44px; height: 44px; padding: 0; border-radius: 50%; }
 .cat-navigation button:focus-visible, summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
