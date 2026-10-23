@@ -21,3 +21,6 @@ console.log('Hesap testleri geçti: ayrı mamalar, ideal kilo, virgüllü sayıl
 for (const weight of ['3.280', '3,280', '3.28', '3,28']) assert.throws(() => calculate({ ...manualCat, weight }), /tam gram/);
 assert.throws(() => calculate({ ...automaticCat, ideal: '4.000' }), /tam gram/);
 assert.equal(calculate({ ...automaticCat, ideal: '' }).referenceWeight, 8);
+
+for (const factor of ['1.8', '2', '5']) assert.throws(() => calculate({ ...manualCat, factor }), /RER katsayısını/);
+for (const factor of ['0.8','1','1.2','1.4','2.5']) assert.equal(calculate({ ...manualCat, factor }).energy, 70 * 3.28 ** 0.75 * Number(factor));

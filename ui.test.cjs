@@ -3,7 +3,7 @@ const { chromium } = require('playwright');
 (async () => {
  const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || 'msedge' });
  try {
-  for (const width of [1440, 768, 390, 375, 320]) {
+  for (const width of [1440, 1024, 820, 768, 390, 375, 320]) {
    const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: 'reduce', colorScheme: 'dark' });
    const page = await context.newPage();
    const errors = []; page.on('pageerror', error => errors.push(error.message));
@@ -22,6 +22,16 @@ const { chromium } = require('playwright');
    const navigation = await page.locator('.cat-navigation').boundingBox();
    assert.ok(navigation.y - (controls.y + controls.height) >= 30);
    assert.ok(Math.abs(navigation.x + navigation.width / 2 - width / 2) <= 1);
+   const selectedTab = await page.locator('#tab-cat1').boundingBox();
+   assert.ok(Math.abs(selectedTab.x + selectedTab.width / 2 - width / 2) <= 1, 'Single profile centers on screen');
+   assert.ok(await page.locator('#install-instructions').isHidden());
+   await page.locator('#install-title').click();
+   assert.ok(await page.locator('#install-instructions').isVisible());
+   assert.equal(await page.locator('#install-instructions section').count(), 3);
+   assert.ok((await page.locator('#install-instructions').innerText()).includes('Web Uygulaması Olarak Aç'));
+   assert.equal(await page.locator('#install-instructions a').count(), 3);
+   await page.locator('#install-title').click();
+   assert.ok(await page.locator('#install-instructions').isHidden());
    const originalTheme = await page.locator('html').getAttribute('data-theme');
    await page.locator('#theme-toggle').click();
    assert.notEqual(await page.locator('html').getAttribute('data-theme'), originalTheme);
@@ -101,17 +111,17 @@ const { chromium } = require('playwright');
     }
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
    }
-   await page.locator('#language').selectOption('en');
+   await page.locator('#language summary').click(); await page.locator('[data-language=en]').click();
    assert.equal(await page.locator('#add-cat').getAttribute('aria-label'), 'Add cat');
    await page.locator('#tab-cat8').click();
    assert.equal(await page.locator('#appearance-title').innerText(), 'Cat appearance');
    await page.keyboard.press('Escape');
-   assert.equal(await page.locator('#theme-toggle svg:not([hidden])').count(), 1);
+   assert.equal(await page.locator('#theme-toggle svg:not([hidden])').count(), 2);
    await page.locator('#tab-cat1').click();
    const rerInfo = page.locator('#cat1 .field-info').filter({ has: page.locator('summary[aria-label="RER multiplier — Information"]') });
    await rerInfo.locator('summary').click();
    assert.ok((await rerInfo.innerText()).includes('Choose a multiplier for your cat’s age and condition.'));
-   assert.ok((await rerInfo.innerText()).includes('0.8× and 1.8× use target weight'));
+   assert.ok((await rerInfo.innerText()).includes('0.8× weight loss uses ideal weight'));
    assert.ok((await rerInfo.innerText()).includes('starting estimate'));
    assert.equal(await page.locator('#cat1 .result-label').innerText(), 'Estimated daily food amount');
    await page.locator('#cat1-weight').click();
@@ -121,6 +131,20 @@ const { chromium } = require('playwright');
    assert.ok((await foodInfo.innerText()).includes('350 kcal/100 g, enter 3500'));
    assert.ok((await foodInfo.innerText()).includes('metabolizable energy'));
    await foodInfo.locator('summary').click();
+   assert.equal(await foodInfo.locator('.info-content').isVisible(), false);
+   for (const detail of await page.locator('#cat1 .field-info').all()) {
+    for (let repeat = 0; repeat < 3; repeat++) {
+     await detail.locator('summary').click();
+     assert.equal(await detail.locator('.info-content').isVisible(), true);
+     await page.keyboard.press('Escape');
+     assert.equal(await detail.locator('.info-content').isVisible(), false);
+    }
+   }
+   assert.deepEqual(await page.locator('#cat1-factor option').evaluateAll(options => options.map(option => option.value)), ['0.8','1','1.2','1.4','2.5']);
+   assert.ok((await rerInfo.locator('a').getAttribute('href')).includes('aaha.org'));
+   assert.ok(await page.locator('#cat1 .estimate-note').isVisible());
+   await page.evaluate(() => document.fonts.load('16px Nunito'));
+   assert.ok(await page.evaluate(() => document.fonts.check('16px Nunito')));
    const colors = await page.getByRole('tab').evaluateAll(tabs => tabs.map(tab => tab.dataset.color));
    await page.reload();
    assert.equal(await page.getByRole('tab').count(), 8);
@@ -364,7 +388,7 @@ const { chromium } = require('playwright');
   await hapticPage.locator('#tab-cat1').click();
   await hapticPage.locator('#cat1-factor').selectOption('1.2');
   await hapticPage.locator('#cat1-automatic').selectOption('true');
-  await hapticPage.locator('#language').selectOption('en');
+  await hapticPage.locator('#language summary').click(); await hapticPage.locator('[data-language=en]').click();
   await hapticPage.locator('#theme-toggle').click();
   await hapticPage.waitForFunction(() => !document.getElementById('theme-toggle').disabled);
   await hapticPage.locator('#cat1 summary').first().click();
@@ -386,6 +410,6 @@ const { chromium } = require('playwright');
   await hapticPage.locator('#add-cat').press('Enter');
   assert.equal(await hapticPage.getByRole('tab').count(), 4);
   await hapticContext.close();
-  console.log('UI checks passed: five widths, icon navigation, six matching colors in both themes, info popovers, storage, deletion and calculations.');
+  console.log('UI checks passed: seven widths, icon navigation, six matching colors in both themes, info popovers, storage, deletion and calculations.');
  } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

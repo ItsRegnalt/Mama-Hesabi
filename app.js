@@ -25,7 +25,7 @@ function setTheme(theme, updateBrowserColor = true) {
   const toggle = document.getElementById('theme-toggle');
   const label = language === 'en' ? (theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode') : (theme === 'dark' ? 'Açık moda geç' : 'Koyu moda geç');
   toggle.setAttribute('aria-label', label); toggle.title = label;
-  toggle.querySelectorAll('[data-theme-icon]').forEach(icon => { icon.toggleAttribute('hidden', icon.dataset.themeIcon === theme); });
+  toggle.setAttribute('aria-checked', String(theme === 'dark'));
   if (updateBrowserColor) document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#121212' : '#f2f3f7';
 }
 setTheme(themeChoice || 'light');
@@ -79,14 +79,20 @@ const canRemove = id => id === activeId && id !== defaultCatId && cats.some(cat 
 let activeId = cats[0]?.id || null;
 let nextCatId = cats.length + 1;
 const translations = {
+'1× · Düşük aktivite':'1× · Low activity',
+'2,5× · Büyüme dönemi':'2.5× · Growth',
+'Önceki seçim — yeniden seçin':'Previous selection — choose again',
+'RER katsayısını kaynakta doğrulanan seçeneklerden yeniden seç.':'Choose a RER multiplier from the verified options again.',
+'Bu hesap bir başlangıç tahminidir; veteriner değerlendirmesinin yerini tutmaz. Kilo verme, yavruluk veya hastalıkta beslenme planını veterinerinle belirle.':'This calculation is a starting estimate, not a veterinary assessment. Agree a feeding plan with your veterinarian for weight loss, kittens or illness.',
+'American Animal Hospital Association (AAHA): RER = 70 × kg⁰·⁷⁵; günlük enerji = RER × katsayı.':'American Animal Hospital Association (AAHA): RER = 70 × kg⁰·⁷⁵; daily energy = RER × multiplier.',
 'Tahmini günlük mama miktarı':'Estimated daily food amount',
 'RER, dinlenirken gereken enerjidir. Katsayıyı kedinin yaşına ve durumuna göre seç.':'RER is energy needed at rest. Choose a multiplier for your cat’s age and condition.',
-'1× düşük aktivite; 1,2× kısır yetişkin; yavrular için yaş aralığını seç.':'1× for low activity; 1.2× for neutered adults; choose the age range for kittens.',
-'0,8× ve 1,8× hedef ağırlığı kullanır; hedef boşsa mevcut ağırlık kullanılır.':'0.8× and 1.8× use target weight; a blank target uses current weight.',
+'AAHA aralıkları: kısır yetişkin 1,2–1,4×; kısır olmayan 1,4–1,6×. Listede alt sınırlar kullanılır; büyüme dönemi 2,5×.':'AAHA ranges: neutered adults 1.2–1.4×; intact adults 1.4–1.6×. The list uses the lower bounds; growth uses 2.5×.',
+'0,8× kilo verme hesabı ideal ağırlık içindir. Hedef boşsa mevcut ağırlıkla ön tahmin yapılır; ideal ağırlığı veterinerinle belirle.':'0.8× weight loss uses ideal weight. A blank target estimates from current weight; agree ideal weight with your veterinarian.',
 'Bu bir başlangıç tahminidir; miktarı kilo takibi ve veteriner önerisiyle ayarla.':'This is a starting estimate; adjust with weight monitoring and veterinary advice.',
 'Pakette “metabolize edilebilir enerji” veya “ME” satırındaki kcal/kg değerini bul.':'Find kcal/kg under “metabolizable energy” or “ME” on the package.',
 'Örnek: 350 kcal/100 g yazıyorsa 3500 gir.':'Example: if it says 350 kcal/100 g, enter 3500.',
-'Veteriner kaynağı':'Veterinary reference',
+'AAHA 2021 · Enerji gereksinimi hesabı (Kutu 1)':'AAHA 2021 · Energy requirement calculation (Box 1)',
 
 'Bu kedi profilini kaldırmak ister misin?':'Would you like to remove this cat profile?','Evet':'Yes','Hayır':'No','Kedi profili kaldırıldı.':'Cat profile removed.',
 'Kedi ekle':'Add cat','Tam gram: 3280.':'Whole grams: 3280.','Paketteki kcal/kg.':'Package kcal/kg.','Boşsa mevcut ağırlık.':'Blank uses current weight.','Bilgi':'Information','Girdiğiniz bilgiler cihazınızda saklanır.':'Your information is stored on your device.','Profili kaldır':'Remove profile','Hesaplama ayrıntısı':'Calculation details',
@@ -107,9 +113,22 @@ const t = text => language === 'en' ? translations[text] || text : text;
 function translatePage() {
   document.documentElement.lang = language;
   document.title = language === 'en' ? 'Pati Gram · Cat Food Calculator' : 'Pati Gram · Kedi Mama Hesabı';
-  document.getElementById('language').value = language;
+  document.querySelectorAll('[data-language]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.language === language)));
   document.getElementById('copyright').textContent = `© ${new Date().getFullYear()} Vivid Creative Works · ${language === 'en' ? 'An open-source hobby project.' : 'Açık kaynak bir hobi projesi.'}`;
   setTheme(document.documentElement.dataset.theme);
+  const english = language === 'en';
+  document.getElementById('install-title').textContent = english ? 'Add to Home Screen' : 'Ana ekrana ekle';
+  const installGuides = english ? [
+    ['iPhone · Safari', 'Open Pati Gram in Safari. Tap Share (or Page Menu → Share), then Add to Home Screen. Keep “Open as Web App” on if shown, then tap Add.'],
+    ['iPhone / iPad · Chrome', 'Open Pati Gram in Chrome. Tap Share beside the address bar → Add to Home Screen → Add. Keep “Open as Web App” on if shown.'],
+    ['Android · Chrome', 'Open Pati Gram in Chrome. Tap ⋮ → Install and create shortcut → Install, then follow the prompts. Depending on your version, this may say “Add to Home screen”.']
+  ] : [
+    ['iPhone · Safari', 'Pati Gram’ı Safari’de aç. Paylaş’a (veya Sayfa Menüsü → Paylaş) dokun → Ana Ekrana Ekle. Görünüyorsa “Web Uygulaması Olarak Aç” seçeneğini açık tut ve Ekle’ye dokun.'],
+    ['iPhone / iPad · Chrome', 'Pati Gram’ı Chrome’da aç. Adres çubuğunun yanındaki Paylaş → Ana Ekrana Ekle → Ekle yolunu izle. Görünüyorsa “Web Uygulaması Olarak Aç” seçeneğini açık tut.'],
+    ['Android · Chrome', 'Pati Gram’ı Chrome’da aç. ⋮ → Yükle ve kısayol oluştur → Yükle yolunu izle ve ekrandaki adımları tamamla. Sürüme göre “Ana ekrana ekle” yazabilir.']
+  ];
+  const installSources = ['https://support.apple.com/en-gb/guide/iphone/iphea86e5236/ios', 'https://support.google.com/chrome/answer/9658361?co=GENIE.Platform%3DiOS', 'https://support.google.com/chrome/answer/9658361?co=GENIE.Platform%3DAndroid'];
+  document.getElementById('install-instructions').innerHTML = installGuides.map(([title, body], i) => `<section><h3>${title}</h3><p>${body}</p><a href="${installSources[i]}" target="_blank" rel="noopener noreferrer">${english ? 'Official guide' : 'Resmî rehber'} ↗</a></section>`).join('') + `<p class="install-note">${english ? 'Menu names vary by system version. If the option is missing on iPhone, try Safari. The home-screen app may use separate storage; you may need to enter your profiles again.' : 'Menü adları sistem sürümüne göre değişebilir. iPhone’da seçenek yoksa Safari’yi dene. Ana ekran uygulaması ayrı depolama kullanabilir; profillerini yeniden girmen gerekebilir.'}</p>`;
   for (const [id, text] of [['delete-question', 'Bu kedi profilini kaldırmak ister misin?'], ['delete-no', 'Hayır'], ['delete-yes', 'Evet']]) document.getElementById(id).textContent = t(text);
   document.getElementById('cat-actions-hint').textContent = language === 'en' ? 'Choose a profile; tap the selected cat again to change its appearance. Remove profiles using the button below the form. The first profile is protected.' : 'Profil seçin; görünümünü değiştirmek için seçili kediye tekrar dokunun. Profili formun altından kaldırabilirsiniz. İlk profil korunur.';
   document.getElementById('remove-cat').textContent = language === 'en' ? 'Remove cat profile' : 'Kedi profilini kaldır';
@@ -122,7 +141,7 @@ function translatePage() {
 }
 const format = (value, digits = 1) => value.toLocaleString(language === 'en' ? 'en-US' : 'tr-TR', { maximumFractionDigits: digits });
 const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
-const factors = [['0.8', '0,8× · Kilo verme'], ['1', '1× · Kiloyu koruma'], ['1.2', '1,2× · Kısır yetişkin'], ['1.4', '1,4× · Kısır olmayan yetişkin'], ['1.8', '1,8× · Kilo alma'], ['2', '2× · Yavru, 4–12 ay'], ['2.5', '2,5× · Yavru, 0–4 ay']];
+const factors = [['0.8', '0,8× · Kilo verme'], ['1', '1× · Düşük aktivite'], ['1.2', '1,2× · Kısır yetişkin'], ['1.4', '1,4× · Kısır olmayan yetişkin'], ['2.5', '2,5× · Büyüme dönemi']];
 const infoIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></svg>';
 function catIcon(cat) {
   const index = Math.max(0, catTypes.findIndex(type => type[0] === cat.appearance));
@@ -185,7 +204,7 @@ function centerActiveTab() {
 function renderTabs() {
   const rail = document.getElementById('cat-tabs');
   const previousScroll = rail.scrollLeft;
-  rail.parentElement.classList.toggle('multiple', cats.length > 1);
+  rail.parentElement.classList.toggle('multiple', cats.length > 0);
   document.getElementById('cat-tabs').innerHTML = cats.map((cat, index) => `<div class="profile-tab" role="presentation"><button type="button" role="tab" id="tab-${cat.id}" aria-controls="${cat.id}" aria-selected="${cat.id === activeId}" tabindex="${cat.id === activeId ? 0 : -1}" data-cat="${cat.id}" data-color="${cat.color}" aria-label="${escapeHtml(catName(cat, index))}" title="${escapeHtml(catName(cat, index))}" aria-describedby="cat-actions-hint" aria-keyshortcuts="Delete Shift+F10">${catIcon(cat)}${customizeIcon}</button><span class="profile-name" aria-hidden="true" title="${escapeHtml(catName(cat, index))}">${escapeHtml(catName(cat, index))}</span></div>`).join('');
   document.getElementById('cat-tabs').setAttribute('aria-label', language === 'en' ? 'Cats' : 'Kediler');
   document.getElementById('add-cat').setAttribute('aria-label', t('Kedi ekle'));
@@ -216,9 +235,10 @@ function render() {
 document.getElementById('cats').innerHTML = cats.map(cat => `<article class="cat" data-color="${cat.color}" id="${cat.id}" role="tabpanel" aria-labelledby="tab-${cat.id}"${cat.id === activeId ? '' : ' hidden'}>
   <div class="cat-head"><div class="field"><label for="${cat.id}-name">Kedi adı</label><div class="input-wrap"><input id="${cat.id}-name" name="name" value="${escapeHtml(cat.name)}" maxlength="60" autocomplete="off" enterkeyhint="done"></div></div><div class="field"><label for="${cat.id}-automatic">Besleme yöntemi</label><div class="input-wrap"><select id="${cat.id}-automatic" name="automatic"><option value="true"${cat.automatic ? ' selected' : ''}>Otomat</option><option value="false"${!cat.automatic ? ' selected' : ''}>Elle besleme</option></select></div></div></div>
   <div class="result" role="status" aria-atomic="true"><span class="result-label">Tahmini günlük mama miktarı</span><div class="result-main"><strong data-result="grams">—</strong><span>gram / gün</span></div><div class="result-meta" data-result="meta"></div></div>
+  <p class="estimate-note">${t('Bu hesap bir başlangıç tahminidir; veteriner değerlendirmesinin yerini tutmaz. Kilo verme, yavruluk veya hastalıkta beslenme planını veterinerinle belirle.')}</p>
   <div class="fields"><div class="field-grid">
     ${input(cat, 'weight', 'Mevcut ağırlık (g)', '', true)}
-    <div class="field wide"><div class="label-row"><label for="${cat.id}-factor">RER katsayısı</label>${info('RER katsayısı', `<p>${t('RER, dinlenirken gereken enerjidir. Katsayıyı kedinin yaşına ve durumuna göre seç.')}</p><p>${t('1× düşük aktivite; 1,2× kısır yetişkin; yavrular için yaş aralığını seç.')}</p><p>${t('0,8× ve 1,8× hedef ağırlığı kullanır; hedef boşsa mevcut ağırlık kullanılır.')}</p><p data-result="reference"></p><p>${t('Bu bir başlangıç tahminidir; miktarı kilo takibi ve veteriner önerisiyle ayarla.')}</p><a href="https://www.merckvetmanual.com/multimedia/table/daily-maintenance-energy-requirements-for-dogs-and-cats" target="_blank" rel="noopener noreferrer">${t('Veteriner kaynağı')}</a>`)}</div><div class="input-wrap"><select id="${cat.id}-factor" name="factor">${factors.map(([value, label]) => `<option value="${value}"${cat.factor === value ? ' selected' : ''}>${label}</option>`).join('')}</select></div></div>
+    <div class="field wide"><div class="label-row"><label for="${cat.id}-factor">RER katsayısı</label>${info('RER katsayısı', `<p>${t('American Animal Hospital Association (AAHA): RER = 70 × kg⁰·⁷⁵; günlük enerji = RER × katsayı.')}</p><p>${t('RER, dinlenirken gereken enerjidir. Katsayıyı kedinin yaşına ve durumuna göre seç.')}</p><p>${t('AAHA aralıkları: kısır yetişkin 1,2–1,4×; kısır olmayan 1,4–1,6×. Listede alt sınırlar kullanılır; büyüme dönemi 2,5×.')}</p><p>${t('0,8× kilo verme hesabı ideal ağırlık içindir. Hedef boşsa mevcut ağırlıkla ön tahmin yapılır; ideal ağırlığı veterinerinle belirle.')}</p><p data-result="reference"></p><p>${t('Bu bir başlangıç tahminidir; miktarı kilo takibi ve veteriner önerisiyle ayarla.')}</p><a href="https://www.aaha.org/wp-content/uploads/globalassets/02-guidelines/2021-nutrition-and-weight-management/resourcepdfs/nutritiongl_box1.pdf" target="_blank" rel="noopener noreferrer">${t('AAHA 2021 · Enerji gereksinimi hesabı (Kutu 1)')}</a>`)}</div><div class="input-wrap"><select id="${cat.id}-factor" name="factor">${!factors.some(([value]) => value === cat.factor) ? `<option value="${escapeHtml(cat.factor)}" selected disabled>${escapeHtml(cat.factor)}× · ${t('Önceki seçim — yeniden seçin')}</option>` : ''}${factors.map(([value, label]) => `<option value="${value}"${cat.factor === value ? ' selected' : ''}>${label}</option>`).join('')}</select></div><p class="error" id="${cat.id}-factor-error" role="alert"></p></div>
     <div class="field wide ideal-field">${input(cat, 'ideal', 'Hedef ağırlık (g, isteğe bağlı)', '')}<p class="weight-reference" data-result="weight-reference"></p></div>
     <div class="field wide">${input(cat, 'calories', 'Mamanın enerji değeri', 'kcal / kg')}</div>
   </div>
@@ -253,7 +273,7 @@ function update() {
     const card = document.getElementById(cat.id);
     setPanelVisible(card.querySelector('.portion-box'), cat.automatic);
     const set = (key, value) => { const el = card.querySelector(`[data-result="${key}"]`); if (el) el.textContent = value; };
-    setPanelVisible(card.querySelector('.ideal-field'), ['0.8', '1.8'].includes(cat.factor));
+    setPanelVisible(card.querySelector('.ideal-field'), cat.factor === '0.8');
     card.querySelectorAll('.error').forEach(el => { el.textContent = ''; });
     card.querySelectorAll('[aria-invalid]').forEach(el => {
       el.removeAttribute('aria-invalid');
@@ -420,18 +440,24 @@ new ResizeObserver(centerActiveTab).observe(document.getElementById('cat-tabs'))
 document.getElementById('remove-cat').addEventListener('click', () => requestRemoval(activeId));
 document.addEventListener('click', event => {
   if (event.target.closest('.field-info summary')) haptic();
-  document.querySelectorAll('.field-info[open]').forEach(details => {
+  document.querySelectorAll('.field-info[open], #language[open]').forEach(details => {
     if (!details.contains(event.target)) details.open = false;
   });
 });
 document.addEventListener('keydown', event => {
   if (event.key !== 'Escape') return;
-  const details = document.querySelector('.field-info[open]');
+  const details = document.querySelector('.field-info[open], #language[open]');
   if (details) { details.open = false; details.querySelector('summary').focus(); }
 });
 
 document.getElementById('cats').addEventListener('change', event => {
   if (event.target.matches('select')) haptic();
 });
-document.getElementById('language').addEventListener('change', event => { haptic(); language = event.target.value === 'en' ? 'en' : 'tr'; saveSettings(); render(); });
+document.getElementById('language').addEventListener('click', event => {
+  const option = event.target.closest('[data-language]');
+  if (!option) return;
+  haptic(); language = option.dataset.language === 'en' ? 'en' : 'tr';
+  document.getElementById('language').open = false;
+  saveSettings(); render(); document.querySelector('#language summary').focus();
+});
 render();

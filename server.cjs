@@ -16,6 +16,7 @@ files['/manifest.webmanifest'] = ['manifest.webmanifest', 'application/manifest+
 for (const name of ['favicon.png', 'icon-192.png', 'icon-512.png']) files[`/${name}`] = [name, 'image/png'];
 files['/cat-portraits.png'] = ['cat-portraits.png', 'image/png'];
 files['/apple-touch-icon.png'] = ['apple-touch-icon.png', 'image/png'];
+for (const weight of [400, 600, 700]) files[`/nunito-${weight}.ttf`] = [`nunito-${weight}.ttf`, 'font/ttf'];
 server.on('error', error => { console.error(error.code === 'EADDRINUSE' ? '4783 portu kullanimda. Acik Mama Payi penceresini kontrol et.' : error.message); process.exitCode = 1; });
 server.listen(4783, '0.0.0.0', () => {
   console.log('Mama Payi acik. Kapatmak icin Ctrl+C.\nBilgisayar: http://localhost:4783');
