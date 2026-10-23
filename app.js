@@ -39,12 +39,6 @@ document.getElementById('theme-toggle').addEventListener('click', async event =>
   themeChoice = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
   const apply = () => { setTheme(themeChoice, false); saveSettings(); };
   if (reducedMotion.matches || !document.startViewTransition) { apply(); setTheme(themeChoice); return; }
-  const box = button.getBoundingClientRect();
-  const x = box.x + box.width / 2, y = box.y + box.height / 2;
-  const viewport = window.visualViewport;
-  const width = Math.max(innerWidth, document.documentElement.clientWidth, (viewport?.width || 0) + (viewport?.offsetLeft || 0));
-  const height = Math.max(innerHeight, document.documentElement.clientHeight, (viewport?.height || 0) + (viewport?.offsetTop || 0));
-  const radius = Math.hypot(Math.max(x, width - x), Math.max(y, height - y)) + 2;
   button.disabled = true;
   // Capture complete theme colors, rather than intermediate control transitions.
   document.documentElement.classList.add('theme-transition');
@@ -52,8 +46,8 @@ document.getElementById('theme-toggle').addEventListener('click', async event =>
   try {
     const transition = document.startViewTransition(apply);
     await transition.ready;
-    document.documentElement.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] }, {
-      duration: 600, easing: 'cubic-bezier(.22, 1, .36, 1)', pseudoElement: '::view-transition-new(root)'
+    document.documentElement.animate({ opacity: [0, 1] }, {
+      duration: 280, easing: 'ease-in-out', pseudoElement: '::view-transition-new(root)'
     });
     await transition.finished;
   } catch { apply(); }
@@ -77,6 +71,9 @@ let cats = (Array.isArray(saved.cats) ? storedCats : [newCat('cat1')]).map((stor
   if (!['0.8', '1', '1.2', '1.4', '1.8', '2', '2.5'].includes(cat.factor)) cat.factor = '1';
   return cat;
 });
+if (!cats.length) cats.push(newCat('cat1'));
+const defaultCatId = cats[0].id;
+const canRemove = id => id === activeId && id !== defaultCatId && cats.some(cat => cat.id === id);
 let activeId = cats[0]?.id || null;
 let nextCatId = cats.length + 1;
 const translations = {
@@ -103,7 +100,8 @@ function translatePage() {
   document.getElementById('copyright').textContent = `© ${new Date().getFullYear()} Vivid Creative Works · ${language === 'en' ? 'An open-source hobby project.' : 'Açık kaynak bir hobi projesi.'}`;
   setTheme(document.documentElement.dataset.theme);
   for (const [id, text] of [['delete-question', 'Bu kedi profilini kaldırmak ister misin?'], ['delete-no', 'Hayır'], ['delete-yes', 'Evet']]) document.getElementById(id).textContent = t(text);
-  document.getElementById('cat-actions-hint').textContent = language === 'en' ? 'Hold a cat icon for 3 seconds to remove its profile. Keyboard: Delete.' : 'Profili kaldırmak için kedi simgesine 3 saniye basılı tutun. Klavye: Delete.';
+  document.getElementById('cat-actions-hint').textContent = language === 'en' ? 'Hold the selected cat icon to remove its profile. The first profile is protected. Keyboard: Delete.' : 'Kaldırmak için seçili kedi simgesine basılı tutun. İlk profil korunur. Klavye: Delete.';
+  document.getElementById('remove-cat').textContent = language === 'en' ? 'Remove cat profile' : 'Kedi profilini kaldır';
   document.getElementById('cats').setAttribute('aria-label', language === 'en' ? 'Cat feeding settings' : 'Kedi beslenme ayarları');
   const walker = document.createTreeWalker(document.getElementById('cats'), NodeFilter.SHOW_TEXT);
   while (walker.nextNode()) {
@@ -117,7 +115,6 @@ const factors = [['0.8', '0,8× · Kilo verme'], ['1', '1× · Kiloyu koruma'], 
 const infoIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></svg>';
 const catIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10V3l6 4h4l6-4v7c1 2 1 5-1 7-3 4-11 4-14 0-2-2-2-5-1-7Z"/><path d="M8 12h.1m7.8 0h.1M10 15l2 1 2-1m-2 1v2M3 14l4 1m10 0 4-1"/></svg>';
 const holdRing = '<svg class="hold-ring" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19" pathLength="1"/></svg>';
-document.getElementById('add-cat').insertAdjacentHTML('beforeend', holdRing);
 function info(label, content) {
   return `<details class="field-info"><summary aria-label="${escapeHtml(t(label))} — ${t('Bilgi')}">${infoIcon}</summary><div class="info-content">${content}</div></details>`;
 }
@@ -132,10 +129,12 @@ function renderTabs() {
   document.getElementById('cat-tabs').innerHTML = cats.map((cat, index) => `<button type="button" role="tab" id="tab-${cat.id}" aria-controls="${cat.id}" aria-selected="${cat.id === activeId}" tabindex="${cat.id === activeId ? 0 : -1}" data-cat="${cat.id}" data-color="${cat.color}" aria-label="${escapeHtml(catName(cat, index))}" title="${escapeHtml(catName(cat, index))}" aria-describedby="cat-actions-hint" aria-keyshortcuts="Delete Shift+F10">${catIcon}${holdRing}${cats.length > 1 ? `<span>${index + 1}</span>` : ''}</button>`).join('');
   document.getElementById('cat-tabs').setAttribute('aria-label', language === 'en' ? 'Cats' : 'Kediler');
   document.getElementById('add-cat').setAttribute('aria-label', t('Kedi ekle'));
-  document.getElementById('add-cat').title = language === 'en' ? 'Hold for 1.5 seconds to add a cat' : 'Kedi eklemek için 1,5 saniye basılı tutun';
+  document.getElementById('add-cat').title = t('Kedi ekle');
+  document.getElementById('remove-cat').hidden = !canRemove(activeId);
   document.getElementById(`tab-${activeId}`)?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: reducedMotion.matches ? 'instant' : 'smooth' });
 }
 function activateCat(id) {
+  cancelHold();
   activeId = id;
   renderTabs();
   cats.forEach(cat => { document.getElementById(cat.id).hidden = cat.id !== activeId; });
@@ -242,7 +241,7 @@ const deleteDialog = document.getElementById('delete-dialog');
 let pendingDeleteId = null;
 let deleteSuccessTimer;
 function requestRemoval(id) {
-  if (deleteDialog.open || !cats.some(cat => cat.id === id)) return;
+  if (deleteDialog.open || !canRemove(id)) return;
   pendingDeleteId = id;
   document.getElementById('delete-confirm').hidden = false;
   document.getElementById('delete-success').hidden = true;
@@ -266,16 +265,16 @@ document.querySelector('.cat-navigation').addEventListener('pointerdown', event 
   if (!tab) return;
   cancelHold();
   suppressTabClick = false;
+  if (!canRemove(tab.dataset.cat)) return;
   const current = { tab, x: event.clientX, y: event.clientY };
   hold = current;
   tab.classList.add('holding');
   current.timer = setTimeout(() => {
     if (hold !== current) return;
-    suppressTabClick = tab.id !== 'add-cat';
+    suppressTabClick = true;
     cancelHold();
-    if (tab.id === 'add-cat') addCat();
-    else requestRemoval(tab.dataset.cat);
-  }, tab.id === 'add-cat' ? 400 : 800);
+    requestRemoval(tab.dataset.cat);
+  }, 500);
 });
 document.querySelector('.cat-navigation').addEventListener('contextmenu', event => event.preventDefault());
 document.addEventListener('pointermove', event => {
@@ -294,6 +293,7 @@ deleteDialog.querySelector('form').addEventListener('submit', event => {
   event.preventDefault();
   const id = pendingDeleteId;
   pendingDeleteId = null;
+  if (!canRemove(id)) return;
   const index = cats.findIndex(cat => cat.id === id);
   if (index < 0) return;
   haptic([10, 40, 10]);
@@ -306,7 +306,7 @@ deleteDialog.querySelector('form').addEventListener('submit', event => {
   document.getElementById('delete-done').textContent = language === 'en' ? 'Done' : 'Tamam';
   deleteDialog.setAttribute('aria-labelledby', 'delete-success-message');
   document.getElementById('delete-done').focus();
-  deleteSuccessTimer = setTimeout(() => deleteDialog.close(), 1800);
+  deleteSuccessTimer = setTimeout(() => deleteDialog.close(), 900);
 });
 deleteDialog.addEventListener('close', () => {
   clearTimeout(deleteSuccessTimer);
@@ -337,9 +337,8 @@ function addCat() {
   render(); saveSettings();
   document.getElementById(`${cat.id}-name`).focus();
 }
-document.getElementById('add-cat').addEventListener('click', event => {
-  if (event.detail === 0) addCat();
-});
+document.getElementById('add-cat').addEventListener('click', addCat);
+document.getElementById('remove-cat').addEventListener('click', () => requestRemoval(activeId));
 document.addEventListener('click', event => {
   if (event.target.closest('.field-info summary')) haptic();
   document.querySelectorAll('.field-info[open]').forEach(details => {
