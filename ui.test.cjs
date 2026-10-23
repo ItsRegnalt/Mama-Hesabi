@@ -12,6 +12,15 @@ const { chromium } = require('playwright');
    assert.equal(await page.locator('#tab-cat1 svg').count(), 1);
    assert.equal(await page.locator('#tab-cat1').innerText(), '');
    assert.equal(await page.locator('input[name=food]').count(), 0);
+   const controls = await page.locator('.toolbar').boundingBox();
+   const navigation = await page.locator('.cat-navigation').boundingBox();
+   assert.ok(navigation.y - (controls.y + controls.height) >= 30);
+   assert.ok(Math.abs(navigation.x + navigation.width / 2 - width / 2) <= 1);
+   const originalTheme = await page.locator('html').getAttribute('data-theme');
+   await page.locator('#theme-toggle').click();
+   assert.notEqual(await page.locator('html').getAttribute('data-theme'), originalTheme);
+   await page.locator('#theme-toggle').click();
+   assert.equal(await page.locator('html').getAttribute('data-theme'), originalTheme);
    assert.equal(await page.locator('[aria-invalid=true]').count(), 0);
    await page.locator('#cat1-weight').fill('3.280');
    assert.equal(await page.locator('#cat1-weight').getAttribute('aria-invalid'), 'true');
@@ -42,12 +51,14 @@ const { chromium } = require('playwright');
    for (let i = 2; i <= 8; i++) {
     await page.locator('#add-cat').click();
     await page.locator(`#cat${i}-name`).fill(`Test ${i}`);
+    assert.ok(await page.locator(`#tab-cat${i}`).evaluate(el => { const tab = el.getBoundingClientRect(), strip = el.parentElement.getBoundingClientRect(); return tab.left >= strip.left && tab.right <= strip.right + 1; }));
    }
    assert.equal(await page.getByRole('tab').count(), 8);
    assert.equal(await page.locator('#tab-cat2').innerText(), '2');
    assert.equal(new Set(await page.getByRole('tab').evaluateAll(tabs => tabs.slice(0, 6).map(tab => tab.dataset.color))).size, 6);
    for (const theme of ['light', 'dark']) {
-    await page.locator(`[data-theme-choice=${theme}]`).click();
+    if (await page.locator('html').getAttribute('data-theme') !== theme) await page.locator('#theme-toggle').click();
+    assert.equal(await page.locator('html').getAttribute('data-theme'), theme);
     for (let i = 1; i <= 8; i++) {
      const tabColor = await page.locator(`#tab-cat${i}`).evaluate(el => getComputedStyle(el).color);
      const resultColor = await page.locator(`#cat${i} .result`).evaluate(el => getComputedStyle(el).color);
@@ -57,7 +68,7 @@ const { chromium } = require('playwright');
    }
    await page.locator('#language').selectOption('en');
    assert.equal(await page.locator('#add-cat').getAttribute('aria-label'), 'Add cat');
-   assert.equal(await page.getByRole('button', { name: 'Dark', exact: true }).locator('svg').count(), 1);
+   assert.equal(await page.locator('#theme-toggle svg:not([hidden])').count(), 1);
    await page.locator('#tab-cat1').click();
    const rerInfo = page.locator('#cat1 .field-info').filter({ has: page.locator('summary[aria-label="RER multiplier — Information"]') });
    await rerInfo.locator('summary').click();
@@ -71,7 +82,7 @@ const { chromium } = require('playwright');
    assert.equal(await page.locator('#cat1 [data-result=grams]').innerText(), '56.6');
    assert.deepEqual(await page.getByRole('tab').evaluateAll(tabs => tabs.map(tab => tab.dataset.color)), colors);
    assert.ok((await page.locator('#copyright').innerText()).includes(String(new Date().getFullYear())));
-   for (const selector of ['#add-cat', '.language-control', '[data-theme-choice=dark]', '#cat1 summary']) {
+   for (const selector of ['#add-cat', '.language-control', '#theme-toggle', '#cat1 summary']) {
     const box = await page.locator(selector).first().boundingBox();
     assert.ok(box.width >= 44 && box.height >= 44);
    }
@@ -87,17 +98,25 @@ const { chromium } = require('playwright');
   assert.equal(await page.locator('#cat1-weight').inputValue(), '3280');
   await page.locator('#add-cat').click(); await page.locator('#cat3-name').fill('Third');
   await page.locator('#tab-cat2').click();
-  page.once('dialog', dialog => dialog.dismiss()); await page.locator('#cat2 .delete-cat').click();
+  await page.locator('#cat2 .delete-cat').click();
+  assert.ok(await page.locator('#delete-dialog').isVisible());
+  await page.locator('#delete-no').click();
   assert.equal(await page.getByRole('tab').count(), 3);
-  page.once('dialog', dialog => dialog.accept()); await page.locator('#cat2 .delete-cat').click();
+  await page.locator('#cat2 .delete-cat').click(); await page.keyboard.press('Escape');
+  assert.equal(await page.getByRole('tab').count(), 3);
+  await page.locator('#cat2 .delete-cat').click(); await page.locator('#delete-yes').click();
+  await page.waitForFunction(() => document.getElementById('action-status').textContent === 'Kedi profili kaldırıldı.');
   const thirdColor = await page.locator('#cat3').getAttribute('data-color');
   await page.locator('#add-cat').click();
   assert.equal(await page.locator('#cat3-name').inputValue(), 'Third');
   assert.equal(await page.locator('#cat4-name').inputValue(), '');
   await page.reload();
   assert.equal(await page.locator('#cat2').getAttribute('data-color'), thirdColor);
-  page.on('dialog', dialog => dialog.accept());
-  while (await page.getByRole('tab').count()) await page.locator('.cat:not([hidden]) .delete-cat').click();
+  while (await page.getByRole('tab').count()) {
+   const before = await page.getByRole('tab').count();
+   await page.locator('.cat:not([hidden]) .delete-cat').click(); await page.locator('#delete-yes').click();
+   await page.waitForFunction(count => document.querySelectorAll('[role=tab]').length === count - 1, before);
+  }
   await page.reload(); assert.equal(await page.getByRole('tab').count(), 0);
   await page.locator('#add-cat').click(); assert.equal(await page.getByRole('tab').count(), 1);
   await context.close();

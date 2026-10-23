@@ -17,18 +17,27 @@
 <body>
   <main>
     <div class="toolbar">
-      <div class="cat-navigation"><div id="cat-tabs" role="tablist" aria-label="Kediler"></div><button type="button" id="add-cat" aria-label="Kedi ekle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
       <label class="language-control" for="language" title="Dil / Language">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a18 18 0 0 1 0 18 18 18 0 0 1 0-18Z"/></svg>
         <select id="language" aria-label="Dil / Language"><option value="tr">Türkçe</option><option value="en">English</option></select>
       </label>
-      <div class="theme-controls" role="group" aria-label="Görünüm">
-        <button type="button" data-theme-choice="light" aria-label="Açık" title="Açık" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></button>
-        <button type="button" data-theme-choice="dark" aria-label="Koyu" title="Koyu" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 13.2A9 9 0 0 1 10.8 3.5a9 9 0 1 0 9.7 9.7Z"/></svg></button>
+      <div class="theme-controls">
+        <button type="button" id="theme-toggle" aria-label="Koyu moda geç" title="Koyu moda geç">
+          <svg data-theme-icon="light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+          <svg data-theme-icon="dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 13.2A9 9 0 0 1 10.8 3.5a9 9 0 1 0 9.7 9.7Z"/></svg>
+        </button>
       </div>
     </div>
+      <div class="cat-navigation"><div id="cat-tabs" role="tablist" aria-label="Kediler"></div><button type="button" id="add-cat" aria-label="Kedi ekle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
+    <p id="action-status" role="status"></p>
     <section class="cats" id="cats" aria-label="Kedilerin beslenme ayarları"></section>
     <footer><p id="save-status" class="hint save-status" role="status"></p><p id="copyright"></p></footer>
+    <dialog id="delete-dialog" aria-labelledby="delete-question">
+      <form method="dialog">
+        <p id="delete-question">Bu kedi profilini kaldırmak ister misin?</p>
+        <div class="dialog-actions"><button id="delete-no" value="cancel" autofocus>Hayır</button><button id="delete-yes" value="delete">Evet</button></div>
+      </form>
+    </dialog>
   </main>
 </body>
 </html>

@@ -19,16 +19,17 @@ const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
 let manualTheme = themeChoice !== null;
 function setTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  document.querySelectorAll('[data-theme-choice]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.themeChoice === theme)));
+  const toggle = document.getElementById('theme-toggle');
+  const label = language === 'en' ? (theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode') : (theme === 'dark' ? 'Açık moda geç' : 'Koyu moda geç');
+  toggle.setAttribute('aria-label', label); toggle.title = label;
+  toggle.querySelectorAll('[data-theme-icon]').forEach(icon => { icon.toggleAttribute('hidden', icon.dataset.themeIcon === theme); });
   document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#121212' : '#f2f3f7';
 }
 setTheme(themeChoice || (systemTheme.matches ? 'dark' : 'light'));
 systemTheme.addEventListener('change', event => { if (!manualTheme) setTheme(event.matches ? 'dark' : 'light'); });
-document.querySelector('.theme-controls').addEventListener('click', event => {
-  const button = event.target.closest('[data-theme-choice]');
-  if (!button) return;
+document.getElementById('theme-toggle').addEventListener('click', () => {
   manualTheme = true;
-  themeChoice = button.dataset.themeChoice;
+  themeChoice = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
   setTheme(themeChoice);
   saveSettings();
 });
@@ -49,7 +50,8 @@ let cats = (Array.isArray(saved.cats) ? storedCats : [newCat('cat1')]).map((stor
 let activeId = cats[0]?.id || null;
 let nextCatId = cats.length + 1;
 const translations = {
-'Kedi ekle':'Add cat','Tam gram: 3280.':'Whole grams: 3280.','Paketteki kcal/kg.':'Package kcal/kg.','Boşsa mevcut ağırlık.':'Blank uses current weight.','Bilgi':'Information','Bu cihazda otomatik kaydedilir.':'Saved automatically on this device.','Kediyi sil':'Delete cat','Bu kediyi ve kayıtlı bilgilerini silmek istiyor musun?':'Delete this cat and its saved information?','Hesaplama ayrıntısı':'Calculation details',
+'Bu kedi profilini kaldırmak ister misin?':'Would you like to remove this cat profile?','Evet':'Yes','Hayır':'No','Kedi profili kaldırıldı.':'Cat profile removed.',
+'Kedi ekle':'Add cat','Tam gram: 3280.':'Whole grams: 3280.','Paketteki kcal/kg.':'Package kcal/kg.','Boşsa mevcut ağırlık.':'Blank uses current weight.','Bilgi':'Information','Bu cihazda otomatik kaydedilir.':'Saved automatically on this device.','Profili kaldır':'Remove profile','Hesaplama ayrıntısı':'Calculation details',
 'Yalnızca kediler için. RER, dinlenme enerji ihtiyacıdır. Günlük enerji = RER × seçilen çarpan.':'For cats only. RER is resting energy requirement. Daily energy = RER × selected multiplier.',
 'Tam gram gir; nokta veya virgül kullanma. Örn. 3280.':'Enter whole grams without dots or commas, e.g. 3280.',
 'Ağırlığı tam gram olarak gir. Örn. 3280.':'Enter weight in whole grams, e.g. 3280.',
@@ -69,9 +71,9 @@ function translatePage() {
   document.title = language === 'en' ? 'Cat Food Calculator' : 'Kedi Mama Hesabı';
   document.getElementById('language').value = language;
   document.getElementById('copyright').textContent = `© ${new Date().getFullYear()} ${language === 'en' ? 'Cat Food Calculator' : 'Kedi Mama Hesabı'}`;
-  document.querySelector('.theme-controls').setAttribute('aria-label', language === 'en' ? 'Appearance' : 'Görünüm');
+  setTheme(document.documentElement.dataset.theme);
+  for (const [id, text] of [['delete-question', 'Bu kedi profilini kaldırmak ister misin?'], ['delete-no', 'Hayır'], ['delete-yes', 'Evet']]) document.getElementById(id).textContent = t(text);
   document.getElementById('cats').setAttribute('aria-label', language === 'en' ? 'Cat feeding settings' : 'Kedi beslenme ayarları');
-  document.querySelectorAll('[data-theme-choice]').forEach(button => { const label = t(button.dataset.themeChoice === 'light' ? 'Açık' : 'Koyu'); button.setAttribute('aria-label', label); button.title = label; });
   const walker = document.createTreeWalker(document.getElementById('cats'), NodeFilter.SHOW_TEXT);
   while (walker.nextNode()) {
     const node = walker.currentNode, text = node.textContent.trim();
@@ -98,6 +100,7 @@ function renderTabs() {
   document.getElementById('cat-tabs').setAttribute('aria-label', language === 'en' ? 'Cats' : 'Kediler');
   document.getElementById('add-cat').setAttribute('aria-label', t('Kedi ekle'));
   document.getElementById('add-cat').title = t('Kedi ekle');
+  document.getElementById(`tab-${activeId}`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
 function activateCat(id) {
   activeId = id;
@@ -123,7 +126,7 @@ document.getElementById('cats').innerHTML = cats.map(cat => `<article class="cat
   </div>
   <div class="portion-box"${cat.automatic ? '' : ' hidden'}>${input(cat, 'portion', 'Otomat porsiyonu', 'g')}<div class="portion-result"><span class="portion-label">Günlük porsiyon</span><div class="portion-value"><strong data-result="portions">—</strong> porsiyon</div></div><p class="portion-rounding" data-result="rounding"></p></div>
   </div>
-  <button type="button" class="delete-cat">Kediyi sil</button>
+  <button type="button" class="delete-cat">Profili kaldır</button>
 </article>`).join('');
 translatePage();
 renderTabs();
@@ -185,14 +188,24 @@ document.getElementById('cats').addEventListener('input', event => {
   }
   update();
 });
+const deleteDialog = document.getElementById('delete-dialog');
+let pendingDeleteId = null;
 document.getElementById('cats').addEventListener('click', event => {
   if (!event.target.closest('.delete-cat')) return;
-  if (!window.confirm(t('Bu kediyi ve kayıtlı bilgilerini silmek istiyor musun?'))) return;
-  const id = event.target.closest('.cat').id;
+  pendingDeleteId = event.target.closest('.cat').id;
+  deleteDialog.returnValue = 'cancel';
+  deleteDialog.showModal();
+});
+deleteDialog.addEventListener('close', () => {
+  const id = pendingDeleteId;
+  pendingDeleteId = null;
+  if (deleteDialog.returnValue !== 'delete') return;
   const index = cats.findIndex(cat => cat.id === id);
+  if (index < 0) return;
   cats.splice(index, 1);
   activeId = cats[Math.min(index, cats.length - 1)]?.id || null;
   render(); saveSettings();
+  document.getElementById('action-status').textContent = t('Kedi profili kaldırıldı.');
   (document.getElementById(`tab-${activeId}`) || document.getElementById('add-cat')).focus();
 });
 
@@ -212,6 +225,7 @@ document.getElementById('add-cat').addEventListener('click', () => {
   const color = palette.find(color => !cats.some(cat => cat.color === color)) || palette[cats.length % palette.length];
   const cat = newCat(`cat${nextCatId++}`, color);
   cats.push(cat); activeId = cat.id;
+  document.getElementById('action-status').textContent = '';
   render(); saveSettings();
   document.getElementById(`${cat.id}-name`).focus();
 });
