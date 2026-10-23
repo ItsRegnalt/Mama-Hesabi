@@ -22,13 +22,13 @@ function haptic(pattern = 8) {
 }
 const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
 let manualTheme = themeChoice !== null;
-function setTheme(theme) {
+function setTheme(theme, updateBrowserColor = true) {
   document.documentElement.dataset.theme = theme;
   const toggle = document.getElementById('theme-toggle');
   const label = language === 'en' ? (theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode') : (theme === 'dark' ? 'Açık moda geç' : 'Koyu moda geç');
   toggle.setAttribute('aria-label', label); toggle.title = label;
   toggle.querySelectorAll('[data-theme-icon]').forEach(icon => { icon.toggleAttribute('hidden', icon.dataset.themeIcon === theme); });
-  document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#121212' : '#f2f3f7';
+  if (updateBrowserColor) document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#121212' : '#f2f3f7';
 }
 setTheme(themeChoice || (systemTheme.matches ? 'dark' : 'light'));
 systemTheme.addEventListener('change', event => { if (!manualTheme) setTheme(event.matches ? 'dark' : 'light'); });
@@ -37,21 +37,31 @@ document.getElementById('theme-toggle').addEventListener('click', async event =>
   haptic();
   manualTheme = true;
   themeChoice = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-  const apply = () => { setTheme(themeChoice); saveSettings(); };
-  if (reducedMotion.matches || !document.startViewTransition) { apply(); return; }
+  const apply = () => { setTheme(themeChoice, false); saveSettings(); };
+  if (reducedMotion.matches || !document.startViewTransition) { apply(); setTheme(themeChoice); return; }
   const box = button.getBoundingClientRect();
   const x = box.x + box.width / 2, y = box.y + box.height / 2;
-  const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  const viewport = window.visualViewport;
+  const width = Math.max(innerWidth, document.documentElement.clientWidth, (viewport?.width || 0) + (viewport?.offsetLeft || 0));
+  const height = Math.max(innerHeight, document.documentElement.clientHeight, (viewport?.height || 0) + (viewport?.offsetTop || 0));
+  const radius = Math.hypot(Math.max(x, width - x), Math.max(y, height - y)) + 2;
   button.disabled = true;
-  const transition = document.startViewTransition(apply);
+  // Capture complete theme colors, rather than intermediate control transitions.
+  document.documentElement.classList.add('theme-transition');
+  getComputedStyle(document.documentElement).color;
   try {
+    const transition = document.startViewTransition(apply);
     await transition.ready;
     document.documentElement.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] }, {
       duration: 600, easing: 'cubic-bezier(.22, 1, .36, 1)', pseudoElement: '::view-transition-new(root)'
     });
     await transition.finished;
-  } catch { setTheme(themeChoice); }
-  finally { button.disabled = false; }
+  } catch { apply(); }
+  finally {
+    setTheme(themeChoice);
+    document.documentElement.classList.remove('theme-transition');
+    button.disabled = false;
+  }
 });
 const palette = ['blue', 'green', 'rose', 'amber', 'purple', 'teal'];
 const newCat = (id, color = 'blue') => ({ id, color, name: '', weight: '', ideal: '', factor: '1', food: '', calories: '', automatic: false, portion: '' });

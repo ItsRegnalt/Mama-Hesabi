@@ -183,12 +183,41 @@ const { chromium } = require('playwright');
   await touchPage.locator('#tab-cat1').focus(); await touchPage.keyboard.press('Shift+F10');
   assert.ok(await touchPage.locator('#delete-dialog').isVisible());
   await touchPage.keyboard.press('Escape');
+  await touchPage.evaluate(() => {
+    const start = document.startViewTransition.bind(document);
+    window.themeCaptures = [];
+    document.startViewTransition = update => start(async () => {
+      const browserColor = document.querySelector('meta[name="theme-color"]').content;
+      await update();
+      const field = document.querySelector('#cat1-factor');
+      window.themeCaptures.push({
+        theme: document.documentElement.dataset.theme,
+        ink: getComputedStyle(field).color,
+        fill: getComputedStyle(field).webkitTextFillColor,
+        paper: getComputedStyle(field).backgroundColor,
+        transition: getComputedStyle(field.parentElement).transitionDuration,
+        browserColor,
+        capturedBrowserColor: document.querySelector('meta[name="theme-color"]').content
+      });
+    });
+  });
   await touchPage.locator('#theme-toggle').click();
   await touchPage.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
   await touchPage.waitForFunction(() => !document.getElementById('theme-toggle').disabled);
   await touchPage.locator('#theme-toggle').click();
   await touchPage.waitForFunction(() => document.documentElement.dataset.theme === 'light');
   await touchPage.waitForFunction(() => !document.getElementById('theme-toggle').disabled);
+  const captures = await touchPage.evaluate(() => window.themeCaptures);
+  assert.equal(captures.length, 2);
+  for (const capture of captures) {
+    assert.equal(capture.ink, capture.theme === 'dark' ? 'rgb(237, 237, 237)' : 'rgb(33, 33, 33)');
+    assert.equal(capture.fill, capture.ink);
+    assert.equal(capture.paper, capture.theme === 'dark' ? 'rgb(30, 30, 30)' : 'rgb(250, 250, 250)');
+    assert.equal(capture.transition, '0s');
+    assert.equal(capture.browserColor, capture.capturedBrowserColor);
+  }
+  assert.equal(await touchPage.locator('html').evaluate(el => el.classList.contains('theme-transition')), false);
+  assert.equal(await touchPage.locator('meta[name="theme-color"]').getAttribute('content'), '#f2f3f7');
   await touchPage.locator('#cat1-automatic').selectOption('true');
   await touchPage.locator('#cat1-automatic').selectOption('false');
   await touchPage.locator('#cat1-automatic').selectOption('true');
