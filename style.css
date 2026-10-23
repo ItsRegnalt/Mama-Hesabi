@@ -107,10 +107,9 @@ option { color: var(--ink); background: var(--paper); }
 #cat-tabs { display: flex; gap: 6px; overflow-x: auto; min-width: 0; padding: 3px; }
 .cat-navigation button { display: flex; align-items: center; justify-content: center; gap: 4px; font: inherit; font-size: 14px; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); padding: 8px 12px; cursor: pointer; }
 #cat-tabs button { flex-shrink: 0; width: 64px; height: 64px; padding: 4px; gap: 2px; border-radius: 50%; color: var(--accent); background: var(--tint); border-color: transparent; }
-#cat-tabs svg { width: 28px; height: 28px; }
+#cat-tabs svg { width: 44px; height: 44px; }
 #cat-tabs .cat-number { position: absolute; right: 2px; bottom: 2px; min-width: 20px; height: 20px; padding: 0 4px; display: grid; place-items: center; border-radius: 10px; background: var(--paper); color: var(--accent); font-size: 11px; font-weight: 600; line-height: 1; white-space: nowrap; }
 #cat-tabs svg { color: var(--icon-ink); }
-#cat-tabs svg > path:first-child { fill: var(--light-bg); }
 #cat-tabs [aria-selected=true] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 #add-cat { flex-shrink: 0; width: 52px; height: 52px; padding: 0; border-radius: 50%; }
 .cat-navigation button:focus-visible, summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }

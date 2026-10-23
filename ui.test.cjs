@@ -78,7 +78,9 @@ const { chromium } = require('playwright');
      const resultColor = await page.locator(`#cat${i} .result`).evaluate(el => getComputedStyle(el).color);
      assert.equal(tabColor, resultColor);
      const icon = page.locator(`#tab-cat${i} svg`);
-     assert.equal(await icon.locator('path').first().evaluate(el => getComputedStyle(el).fill), 'rgb(242, 243, 247)');
+     assert.equal(await icon.locator('.cat-face').evaluate(el => getComputedStyle(el).fill), 'rgb(250, 247, 239)');
+     assert.equal(await icon.getAttribute('viewBox'), '0 0 64 64');
+     assert.equal(await icon.evaluate(el => getComputedStyle(el).stroke), 'rgb(16, 29, 73)');
      assert.equal(await icon.evaluate(el => getComputedStyle(el).color), ['rgb(49, 93, 139)', 'rgb(57, 102, 71)', 'rgb(139, 69, 93)', 'rgb(121, 91, 45)', 'rgb(102, 81, 138)', 'rgb(48, 104, 101)'][(i - 1) % 6]);
     }
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
