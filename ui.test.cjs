@@ -4,12 +4,13 @@ const { chromium } = require('playwright');
  const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || 'msedge' });
  try {
   for (const width of [1440, 768, 390, 375, 320]) {
-   const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: 'reduce' });
+   const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: 'reduce', colorScheme: 'dark' });
    const page = await context.newPage();
    const errors = []; page.on('pageerror', error => errors.push(error.message));
    await page.goto('http://localhost:4783');
+   assert.equal(await page.locator('html').getAttribute('data-theme'), 'light', 'First visit opens light even on a dark device');
    assert.equal(await page.getByRole('tab').count(), 1);
-   assert.equal(await page.locator('#tab-cat1 svg').count(), 1);
+   assert.equal(await page.locator('#tab-cat1 .cat-portrait').count(), 1);
    assert.equal(await page.locator('#tab-cat1').innerText(), '');
    assert.equal(await page.locator('input[name=food]').count(), 0);
    assert.equal(await page.locator('#cat1-factor').inputValue(), '1');
@@ -24,6 +25,8 @@ const { chromium } = require('playwright');
    const originalTheme = await page.locator('html').getAttribute('data-theme');
    await page.locator('#theme-toggle').click();
    assert.notEqual(await page.locator('html').getAttribute('data-theme'), originalTheme);
+   await page.reload();
+   assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark', 'Explicit dark theme survives reload');
    await page.locator('#theme-toggle').click();
    assert.equal(await page.locator('html').getAttribute('data-theme'), originalTheme);
    assert.equal(await page.locator('[aria-invalid=true]').count(), 0);
@@ -62,16 +65,16 @@ const { chromium } = require('playwright');
    assert.equal(await page.locator('#cat1-name').evaluate(el => document.activeElement === el), false);
    assert.equal(await page.locator('#cat1-name').inputValue(), 'Örnek <kedi>');
    assert.equal(await page.locator('#tab-cat1').getAttribute('aria-label'), 'Örnek <kedi>');
-   assert.equal(await page.locator('#tab-cat1 svg').count(), 1);
+   assert.equal(await page.locator('#tab-cat1 .cat-portrait').count(), 1);
    assert.equal(await page.locator('#tab-cat1 + .profile-name').innerText(), 'Örnek <kedi>');
    assert.equal(await page.locator('#tab-cat1 + .profile-name kedi').count(), 0);
    await page.locator('#tab-cat1').click();
    assert.equal(await page.locator('#appearance-options button').count(), 12);
    await page.locator('[data-appearance=black]').click();
    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('mama-payi-v3')).cats[0].appearance), 'black');
-   assert.equal(await page.locator('#tab-cat1 svg').getAttribute('viewBox'), '960 480 320 320');
+   assert.equal(await page.locator('#tab-cat1 .cat-portrait').getAttribute('viewBox'), '926 474 320 320');
    await page.reload();
-   assert.equal(await page.locator('#tab-cat1 svg').getAttribute('viewBox'), '960 480 320 320');
+   assert.equal(await page.locator('#tab-cat1 .cat-portrait').getAttribute('viewBox'), '926 474 320 320');
    await page.locator('#tab-cat1').click();
    await page.locator('[data-appearance=tabby]').click();
    for (let i = 2; i <= 8; i++) {
@@ -81,7 +84,7 @@ const { chromium } = require('playwright');
    }
    assert.equal(await page.getByRole('tab').count(), 8);
    assert.equal(await page.locator('#tab-cat2').innerText(), '');
-   assert.equal(new Set(await page.locator('#cat-tabs svg').evaluateAll(paths => paths.slice(0, 6).map(path => path.getAttribute('viewBox')))).size, 6);
+   assert.equal(new Set(await page.locator('#cat-tabs .cat-portrait').evaluateAll(paths => paths.slice(0, 6).map(path => path.getAttribute('viewBox')))).size, 6);
    assert.equal(new Set(await page.getByRole('tab').evaluateAll(tabs => tabs.slice(0, 6).map(tab => tab.dataset.color))).size, 6);
    for (const theme of ['light', 'dark']) {
     if (await page.locator('html').getAttribute('data-theme') !== theme) await page.locator('#theme-toggle').click();
@@ -90,7 +93,7 @@ const { chromium } = require('playwright');
      const tabColor = await page.locator(`#tab-cat${i}`).evaluate(el => getComputedStyle(el).color);
      const resultColor = await page.locator(`#cat${i} .result`).evaluate(el => getComputedStyle(el).color);
      assert.equal(tabColor, resultColor);
-     const icon = page.locator(`#tab-cat${i} svg`);
+     const icon = page.locator(`#tab-cat${i} .cat-portrait`);
      assert.equal(await icon.locator('image').getAttribute('href'), 'cat-portraits.png?v=3');
      assert.equal(await icon.locator('image').evaluate(el => el.getAttribute('clip-path')), null);
      assert.equal(await icon.locator('clipPath path').count(), 0);
@@ -141,7 +144,7 @@ const { chromium } = require('playwright');
   assert.equal(await page.locator('.cat-number').count(), 0);
 
   assert.equal(await page.locator('#cat1-weight').inputValue(), '3280');
-  assert.equal(await page.locator('#tab-cat2 svg').getAttribute('viewBox'), '320 150 320 320');
+  assert.equal(await page.locator('#tab-cat2 .cat-portrait').getAttribute('viewBox'), '315 146 320 320');
   await page.locator('#add-cat').press('Enter'); await page.locator('#cat3-name').fill('Third');
   await page.locator('#tab-cat2').click();
   await page.locator('#tab-cat2').focus(); await page.keyboard.press('Delete');
@@ -312,6 +315,29 @@ const { chromium } = require('playwright');
   await railPage.waitForTimeout(550);
   assert.equal(await railPage.locator('[aria-selected=true]').getAttribute('data-cat'), 'cat5');
   assert.equal(await railPage.evaluate(() => window.scrollY), 0);
+  // Manual scrolling must select the nearest profile and settle back to an exact center.
+  for (const position of ['end', 'start', 'between']) {
+    await railPage.locator('#cat-tabs').evaluate((rail, position) => {
+      rail.scrollLeft = position === 'end' ? rail.scrollWidth : position === 'start' ? 0 : rail.scrollLeft + 111;
+    }, position);
+    await railPage.waitForTimeout(900);
+    const selected = await railPage.locator('#cat-tabs [aria-selected=true]').evaluate(tab => {
+      const bounds = tab.closest('.cat-navigation').getBoundingClientRect();
+      const box = tab.getBoundingClientRect();
+      return { id: tab.dataset.cat, offset: box.left + box.width / 2 - bounds.left - bounds.width / 2 };
+    });
+    assert.ok(Math.abs(selected.offset) <= 2, `Manual ${position} centered: ${selected.offset}`);
+    if (position === 'end') assert.equal(selected.id, 'cat8');
+    if (position === 'start') assert.equal(selected.id, 'cat1');
+  }
+  const selectedTab = railPage.locator('#cat-tabs [aria-selected=true]');
+  await selectedTab.hover();
+  await railPage.waitForTimeout(200);
+  assert.equal(await selectedTab.locator('.customize-icon').evaluate(el => getComputedStyle(el).opacity), '1');
+  assert.ok(await railPage.locator('#cat-tabs').evaluate(rail => {
+    const name = rail.querySelector('.profile-name').getBoundingClientRect();
+    return rail.getBoundingClientRect().bottom - name.bottom >= 16;
+  }), 'Scrollbar is separated from profile names');
   await railPage.emulateMedia({ reducedMotion: 'reduce' });
   assert.equal(await railPage.evaluate(() => {
     document.getElementById('add-cat').click();

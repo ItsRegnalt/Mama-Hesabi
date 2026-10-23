@@ -104,12 +104,23 @@ option { color: var(--ink); background: var(--paper); }
 }
 
 .cat-navigation { display: flex; width: fit-content; max-width: 100%; min-width: 0; margin: 32px auto 24px; align-items: center; justify-content: center; gap: 8px; }
-#cat-tabs { display: flex; gap: 6px; overflow-x: auto; min-width: 0; padding: 3px; }
+#cat-tabs { display: flex; gap: 8px; overflow-x: auto; min-width: 0; padding: 3px 3px 17px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+#cat-tabs::-webkit-scrollbar { height: 6px; }
+#cat-tabs::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; }
+#cat-tabs::-webkit-scrollbar-track { background: transparent; }
 .cat-navigation button { display: flex; align-items: center; justify-content: center; gap: 4px; font: inherit; font-size: 14px; min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); padding: 8px 12px; cursor: pointer; }
 #cat-tabs button { flex-shrink: 0; width: 64px; height: 64px; padding: 4px; gap: 2px; border-radius: 50%; color: var(--accent); background: var(--tint); border-color: transparent; }
 #cat-tabs svg { width: 44px; height: 44px; }
 #cat-tabs svg { color: var(--icon-ink); }
 #cat-tabs [aria-selected=true] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+#cat-tabs .customize-icon { position: absolute; right: 2px; bottom: 2px; display: grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; background: var(--paper); color: var(--accent); opacity: 0; transform: translateY(3px); pointer-events: none; }
+#cat-tabs .customize-icon svg { width: 12px; height: 12px; }
+#cat-tabs [aria-selected=true]:focus-visible, #cat-tabs [aria-selected=true]:active { background: color-mix(in srgb, var(--tint), var(--accent) 12%); }
+#cat-tabs [aria-selected=true]:is(:focus-visible,:active) .customize-icon { opacity: 1; transform: translateY(0); }
+@media (hover: hover) {
+  #cat-tabs [aria-selected=true]:hover { background: color-mix(in srgb, var(--tint), var(--accent) 12%); }
+  #cat-tabs [aria-selected=true]:hover .customize-icon { opacity: 1; transform: translateY(0); }
+}
 #add-cat { flex-shrink: 0; width: 52px; height: 52px; padding: 0; border-radius: 50%; }
 .cat-navigation button:focus-visible, summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 .label-row { display: flex; align-items: center; position: relative; min-height: 20px; margin-bottom: 8px; }
@@ -178,8 +189,8 @@ footer { margin-top: 32px; text-align: center; color: var(--muted); font-size: 1
 .cat-navigation.multiple { width: 100%; max-width: 420px; }
 .multiple #cat-tabs { flex: 1; }
 .multiple #cat-tabs::before, .multiple #cat-tabs::after { content: ''; }
-.multiple #cat-tabs::before { flex: 0 0 calc(50% - 8px); }
-.multiple #cat-tabs::after { flex: 0 0 calc(50% - 68px); }
+.multiple #cat-tabs::before { flex: 0 0 calc(50% - 10px); }
+.multiple #cat-tabs::after { flex: 0 0 calc(50% - 70px); }
 
 .profile-tab { flex: 0 0 64px; min-width: 0; text-align: center; }
 .profile-tab.outside-rail { opacity: 0; pointer-events: none; }
@@ -196,4 +207,8 @@ footer { margin-top: 32px; text-align: center; color: var(--muted); font-size: 1
 #appearance-options svg { width: 48px; height: 48px; }
 #appearance-options [aria-pressed=true] { border-color: var(--accent); background: var(--tint); }
 #appearance-options button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
-@media (prefers-reduced-motion: no-preference) { .profile-tab { transition: opacity 180ms ease; } }
+@media (prefers-reduced-motion: no-preference) {
+  .profile-tab { transition: opacity 180ms ease; }
+  #cat-tabs button { transition: background-color 160ms ease; }
+  #cat-tabs .customize-icon { transition: opacity 160ms ease, transform 160ms ease; }
+}
